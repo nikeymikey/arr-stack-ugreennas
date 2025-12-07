@@ -1,67 +1,67 @@
 http:
   routers:
-    homarr:
-      rule: "Host(`homarr.yourdomain.com`)"
-      entryPoints:
-        - web
-      service: homarr
-
     sonarr:
-      rule: "Host(`sonarr.yourdomain.com`)"
+      rule: "Host(`sonarr.moosenas.cc`)"
       entryPoints:
         - web
       service: sonarr
 
     radarr:
-      rule: "Host(`radarr.yourdomain.com`)"
+      rule: "Host(`radarr.moosenas.cc`)"
       entryPoints:
         - web
       service: radarr
 
     qbittorrent:
-      rule: "Host(`qbit.yourdomain.com`)"
+      rule: "Host(`qbit.moosenas.cc`)"
       entryPoints:
         - web
       service: qbittorrent
 
     prowlarr:
-      rule: "Host(`prowlarr.yourdomain.com`)"
+      rule: "Host(`prowlarr.moosenas.cc`)"
       entryPoints:
         - web
       service: prowlarr
 
     jellyfin:
-      rule: "Host(`jellyfin.yourdomain.com`)"
+      rule: "Host(`jellyfin.moosenas.cc`)"
       entryPoints:
         - web
       service: jellyfin
 
     jellyseerr:
-      rule: "Host(`jellyseerr.yourdomain.com`)"
+      rule: "Host(`jellyseerr.moosenas.cc`)"
       entryPoints:
         - web
       service: jellyseerr
 
     bazarr:
-      rule: "Host(`bazarr.yourdomain.com`)"
+      rule: "Host(`bazarr.moosenas.cc`)"
       entryPoints:
         - web
       service: bazarr
 
     pihole:
-      rule: "Host(`pihole.yourdomain.com`)"
+      rule: "Host(`pihole.moosenas.cc`)"
       entryPoints:
         - web
       service: pihole
 
     wg:
-      rule: "Host(`wg.yourdomain.com`)"
+      rule: "Host(`wg.moosenas.cc`)"
       entryPoints:
         - web
       service: wg
 
+    uptime:
+      rule: "Host(`uptime.moosenas.cc`)"
+      entryPoints:
+        - web
+      service: uptime
+
     traefik-dashboard:
-      rule: "Host(`traefik.yourdomain.com`)"
+      rule: "Host(`traefik.moosenas.cc`)"
       entryPoints:
         - web
       service: api@internal
@@ -72,14 +72,9 @@ http:
     dashboard-auth:
       basicAuth:
         users:
-          - "admin:$apr1$c8hfpRTf$q9JyOMTRUt2bp4XpBR94a."
+          - "admin:$2y$05$MAxBsKrzpgBxt8PMBZ.fcujzfVOqJa8MzlbUyfKMTHIewJ/u7v3u."
 
   services:
-    homarr:
-      loadBalancer:
-        servers:
-          - url: "http://192.168.100.7:7575"
-
     sonarr:
       loadBalancer:
         servers:
@@ -124,3 +119,8 @@ http:
       loadBalancer:
         servers:
           - url: "http://192.168.100.6:51821"
+
+    uptime:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.100.13:3001"

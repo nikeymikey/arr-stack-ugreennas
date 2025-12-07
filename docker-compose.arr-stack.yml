@@ -13,8 +13,6 @@ volumes:
   pihole-etc-pihole:
   pihole-etc-dnsmasq:
   wireguard-easy-config:
-  homarr-config:
-  homarr-icons:
 
 #########################
 # Networks              #
@@ -63,7 +61,8 @@ services:
       - WIREGUARD_ADDRESSES=${SURFSHARK_WG_ADDRESS}
       - SERVER_COUNTRIES=${VPN_COUNTRIES:-United Kingdom}
       - TZ=Europe/London
-      - FIREWALL_OUTBOUND_SUBNETS=192.168.100.0/24,10.8.1.0/24
+      - DNS_ADDRESS=192.168.100.5
+      - FIREWALL_OUTBOUND_SUBNETS=192.168.0.0/24,192.168.100.0/24,10.8.1.0/24
     networks:
       traefik-proxy:
         ipv4_address: 192.168.100.3
@@ -94,15 +93,7 @@ services:
       - qbittorrent-config:/config
       - /volume1/Media/downloads:/downloads
       - /volume1/Media:/media
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.qbittorrent.rule=Host(`qbit.${DOMAIN}`)"
-      - "traefik.http.routers.qbittorrent.entrypoints=web,websecure"
-      - "traefik.http.routers.qbittorrent.tls=true"
-      - "traefik.http.routers.qbittorrent.tls.certresolver=cloudflare"
-      - "traefik.http.routers.qbittorrent.service=qbittorrent"
-      - "traefik.http.services.qbittorrent.loadbalancer.server.port=8085"
-      - "traefik.http.routers.qbittorrent.middlewares=security-headers@file"
+    # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
@@ -128,15 +119,7 @@ services:
       - sonarr-config:/config
       - /volume1/Media/tv:/tv
       - /volume1/Media/downloads:/downloads
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.sonarr.rule=Host(`sonarr.${DOMAIN}`)"
-      - "traefik.http.routers.sonarr.entrypoints=web,websecure"
-      - "traefik.http.routers.sonarr.tls=true"
-      - "traefik.http.routers.sonarr.tls.certresolver=cloudflare"
-      - "traefik.http.routers.sonarr.service=sonarr"
-      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
-      - "traefik.http.routers.sonarr.middlewares=security-headers@file"
+    # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
@@ -160,15 +143,7 @@ services:
       - TZ=Europe/London
     volumes:
       - prowlarr-config:/config
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.${DOMAIN}`)"
-      - "traefik.http.routers.prowlarr.entrypoints=web,websecure"
-      - "traefik.http.routers.prowlarr.tls=true"
-      - "traefik.http.routers.prowlarr.tls.certresolver=cloudflare"
-      - "traefik.http.routers.prowlarr.service=prowlarr"
-      - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
-      - "traefik.http.routers.prowlarr.middlewares=security-headers@file"
+    # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
@@ -194,15 +169,7 @@ services:
       - radarr-config:/config
       - /volume1/Media/movies:/movies
       - /volume1/Media/downloads:/downloads
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.radarr.rule=Host(`radarr.${DOMAIN}`)"
-      - "traefik.http.routers.radarr.entrypoints=web,websecure"
-      - "traefik.http.routers.radarr.tls=true"
-      - "traefik.http.routers.radarr.tls.certresolver=cloudflare"
-      - "traefik.http.routers.radarr.service=radarr"
-      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
-      - "traefik.http.routers.radarr.middlewares=security-headers@file"
+    # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
@@ -218,7 +185,7 @@ services:
     image: jellyfin/jellyfin
     container_name: jellyfin
     ports:
-      - "YOUR_NAS_IP:8096:8096"  # Local network access
+      - "192.168.0.136:8096:8096"  # Local network access
     environment:
       - TZ=Europe/London
     volumes:
@@ -230,15 +197,9 @@ services:
       traefik-proxy:
         ipv4_address: 192.168.100.4
     labels:
+      # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-proxy"
-      - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.${DOMAIN}`)"
-      - "traefik.http.routers.jellyfin.entrypoints=web,websecure"
-      - "traefik.http.routers.jellyfin.tls=true"
-      - "traefik.http.routers.jellyfin.tls.certresolver=cloudflare"
-      - "traefik.http.routers.jellyfin.service=jellyfin"
-      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
-      - "traefik.http.routers.jellyfin.middlewares=security-headers@file"
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
@@ -254,8 +215,8 @@ services:
     image: pihole/pihole:latest
     container_name: pihole
     ports:
-      - "YOUR_NAS_IP:53:53/tcp"  # Bind to NAS IP to avoid conflict with localhost dnsmasq
-      - "YOUR_NAS_IP:53:53/udp"
+      - "192.168.0.136:53:53/tcp"  # Bind to NAS IP to avoid conflict with localhost dnsmasq
+      - "192.168.0.136:53:53/udp"
     networks:
       traefik-proxy:
         ipv4_address: 192.168.100.5
@@ -269,15 +230,9 @@ services:
       - pihole-etc-pihole:/etc/pihole
       - pihole-etc-dnsmasq:/etc/dnsmasq.d
     labels:
+      # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-proxy"
-      - "traefik.http.routers.pihole.rule=Host(`pihole.${DOMAIN}`)"
-      - "traefik.http.routers.pihole.entrypoints=web,websecure"
-      - "traefik.http.routers.pihole.tls=true"
-      - "traefik.http.routers.pihole.tls.certresolver=cloudflare"
-      - "traefik.http.routers.pihole.service=pihole"
-      - "traefik.http.services.pihole.loadbalancer.server.port=80"
-      - "traefik.http.routers.pihole.middlewares=security-headers@file"
     cap_add:
       - NET_ADMIN
       - SYS_NICE
@@ -306,15 +261,9 @@ services:
     volumes:
       - wireguard-easy-config:/etc/wireguard
     labels:
+      # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-proxy"
-      - "traefik.http.routers.wg.rule=Host(`wg.${DOMAIN}`)"
-      - "traefik.http.routers.wg.entrypoints=web,websecure"
-      - "traefik.http.routers.wg.tls=true"
-      - "traefik.http.routers.wg.tls.certresolver=cloudflare"
-      - "traefik.http.routers.wg.service=wg"
-      - "traefik.http.services.wg.loadbalancer.server.port=51821"
-      - "traefik.http.routers.wg.middlewares=security-headers@file"
     ports:
       - "51820:51820/udp"
     networks:
@@ -343,7 +292,7 @@ services:
     image: fallenbagel/jellyseerr:latest
     container_name: jellyseerr
     ports:
-      - "YOUR_NAS_IP:5055:5055"  # Local network access
+      - "192.168.0.136:5055:5055"  # Local network access
     environment:
       - LOG_LEVEL=info
       - TZ=Europe/London
@@ -352,15 +301,9 @@ services:
       traefik-proxy:
         ipv4_address: 192.168.100.8
     labels:
+      # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-proxy"
-      - "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.${DOMAIN}`)"
-      - "traefik.http.routers.jellyseerr.entrypoints=web,websecure"
-      - "traefik.http.routers.jellyseerr.tls=true"
-      - "traefik.http.routers.jellyseerr.tls.certresolver=cloudflare"
-      - "traefik.http.routers.jellyseerr.service=jellyseerr"
-      - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
-      - "traefik.http.routers.jellyseerr.middlewares=security-headers@file"
     volumes:
       - /volume1/docker/arr-stack/jellyseerr/config:/app/config
     restart: unless-stopped
@@ -389,15 +332,9 @@ services:
       - /volume1/Media/movies:/movies
       - /volume1/Media/tv:/tv
     labels:
+      # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-proxy"
-      - "traefik.http.routers.bazarr.rule=Host(`bazarr.${DOMAIN}`)"
-      - "traefik.http.routers.bazarr.entrypoints=web,websecure"
-      - "traefik.http.routers.bazarr.tls=true"
-      - "traefik.http.routers.bazarr.tls.certresolver=cloudflare"
-      - "traefik.http.routers.bazarr.service=bazarr"
-      - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
-      - "traefik.http.routers.bazarr.middlewares=security-headers@file"
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
@@ -418,16 +355,6 @@ services:
     networks:
       traefik-proxy:
         ipv4_address: 192.168.100.10
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik-proxy"
-      - "traefik.http.routers.flaresolverr.rule=Host(`flaresolverr.${DOMAIN}`)"
-      - "traefik.http.routers.flaresolverr.entrypoints=web,websecure"
-      - "traefik.http.routers.flaresolverr.tls=true"
-      - "traefik.http.routers.flaresolverr.tls.certresolver=cloudflare"
-      - "traefik.http.routers.flaresolverr.service=flaresolverr"
-      - "traefik.http.services.flaresolverr.loadbalancer.server.port=8191"
-      - "traefik.http.routers.flaresolverr.middlewares=security-headers@file"
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
@@ -437,65 +364,28 @@ services:
       retries: 2
 
   #############################################
-  # Notification Service (Notifiarr)        #
+  # Monitoring (Uptime Kuma)                 #
   #############################################
-  notifiarr:
-    container_name: notifiarr
-    hostname: notifiarr
-    image: golift/notifiarr
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    container_name: uptime-kuma
     restart: unless-stopped
     environment:
       - TZ=Europe/London
     networks:
       traefik-proxy:
-        ipv4_address: 192.168.100.11
+        ipv4_address: 192.168.100.13
+    volumes:
+      - /volume1/docker/arr-stack/uptime-kuma:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # For Docker container monitoring
     labels:
+      # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-proxy"
-      - "traefik.http.routers.notifiarr.rule=Host(`notifiarr.${DOMAIN}`)"
-      - "traefik.http.routers.notifiarr.entrypoints=web,websecure"
-      - "traefik.http.routers.notifiarr.tls=true"
-      - "traefik.http.routers.notifiarr.tls.certresolver=cloudflare"
-      - "traefik.http.routers.notifiarr.service=notifiarr"
-      - "traefik.http.services.notifiarr.loadbalancer.server.port=5454"
-      - "traefik.http.routers.notifiarr.middlewares=security-headers@file"
-    volumes:
-      - /volume1/docker/arr-stack/notifiarr:/config
-      - /var/run/utmp:/var/run/utmp
-      - /etc/machine-id:/etc/machine-id
-    logging: *default-logging
-
-  #############################################
-  # Dashboard (Homarr)                       #
-  #############################################
-  homarr:
-    image: ghcr.io/homarr-labs/homarr:latest
-    container_name: homarr
-    ports:
-      - "YOUR_NAS_IP:3000:7575"  # Local network access (Homarr runs on 7575 internally)
-    environment:
-      - TZ=Europe/London
-      - SECRET_ENCRYPTION_KEY=${HOMARR_ENCRYPTION_KEY}
-    networks:
-      traefik-proxy:
-        ipv4_address: 192.168.100.7
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock  # Optional, for Docker integration
-      - /volume1/docker/arr-stack/homarr/appdata:/appdata
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik-proxy"
-      - "traefik.http.routers.homarr.rule=Host(`homarr.${DOMAIN}`)"
-      - "traefik.http.routers.homarr.entrypoints=web,websecure"
-      - "traefik.http.routers.homarr.tls=true"
-      - "traefik.http.routers.homarr.tls.certresolver=cloudflare"
-      - "traefik.http.routers.homarr.service=homarr"
-      - "traefik.http.services.homarr.loadbalancer.server.port=7575"
-      - "traefik.http.routers.homarr.middlewares=security-headers@file"
-    restart: unless-stopped
     logging: *default-logging
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:7575/"]
-      interval: 2m
+      test: ["CMD-SHELL", "node /app/extra/healthcheck.js"]
+      interval: 60s
       timeout: 10s
       retries: 3
+      start_period: 30s

@@ -12,8 +12,10 @@ Common issues and solutions for the media automation stack.
 - [*arr Stack Issues](#arr-stack-issues)
 - [Jellyfin Issues](#jellyfin-issues)
 - [Networking Issues](#networking-issues)
+  - [Pi-hole Local DNS (v6+)](#pi-hole-local-dns-not-resolving-v6)
 - [Permission Issues](#permission-issues)
 - [Performance Issues](#performance-issues)
+- [Security Issues](#security-issues)
 - [Useful Commands](#useful-commands)
 
 ---
@@ -746,15 +748,36 @@ services:
 - 192.168.100.9: Bazarr
 - 192.168.100.10: FlareSolverr
 - 192.168.100.11: Notifiarr
+- 192.168.100.12: Cloudflared
+- 192.168.100.13: Uptime Kuma
+
+**Quick Fix** (when a container steals another's IP after reboot):
+```bash
+# 1. Find which container took the wrong IP
+docker network inspect traefik-proxy --format '{{range .Containers}}{{.Name}}: {{.IPv4Address}}{{"\n"}}{{end}}'
+
+# 2. Stop the offending container (e.g., cloudflared took traefik's .2)
+docker stop cloudflared
+
+# 3. Start the container that needs its IP back
+docker start traefik
+
+# 4. Restart the other container (it'll get a new IP)
+docker start cloudflared
+
+# 5. IMPORTANT: Fix the compose file to assign a static IP and recreate
+docker compose -f docker-compose.cloudflared.yml up -d --force-recreate
+```
 
 **After assigning IPs**:
 ```bash
 # Stop all containers to clear IP assignments
-docker compose -f docker-compose.traefik.yml -f docker-compose.arr-stack.yml down
+docker compose -f docker-compose.traefik.yml -f docker-compose.arr-stack.yml -f docker-compose.cloudflared.yml down
 
 # Redeploy with static IPs
 docker compose -f docker-compose.traefik.yml up -d
 docker compose -f docker-compose.arr-stack.yml up -d
+docker compose -f docker-compose.cloudflared.yml up -d
 ```
 
 ---
@@ -782,6 +805,54 @@ docker exec jellyseerr curl -f http://sonarr:8989/
 
 3. **Firewall blocking**:
    - Check container firewall rules
+
+---
+
+### Pi-hole Local DNS Not Resolving (v6+)
+
+**Symptoms**: Added DNS records but they don't resolve, or work externally but not from Docker containers
+
+**Common Mistake**: Using `custom.list` file (outdated method)
+
+**Pi-hole v6+ uses `pihole.toml`**, NOT `custom.list`. The `custom.list` file is ignored.
+
+**Correct Method**:
+
+```bash
+# 1. Edit pihole.toml inside the container (find hosts array ~line 129)
+docker exec -it pihole nano /etc/pihole/pihole.toml
+
+# Find and edit the hosts line:
+hosts = ["192.168.0.141 homeassistant.lan", "192.168.0.100 server.lan"]
+
+# 2. Restart Pi-hole
+docker restart pihole
+
+# 3. Verify
+dig @192.168.0.136 homeassistant.lan +short
+# Should return: 192.168.0.141
+```
+
+**IMPORTANT: .local vs .lan TLDs**:
+
+| TLD | Works from Docker containers? | Works from network devices? |
+|-----|-------------------------------|----------------------------|
+| `.local` | **NO** (mDNS reserved, intercepted by Docker DNS) | Yes |
+| `.lan` | **Yes** | Yes |
+| `.home` | **Yes** | Yes |
+
+**Why .local fails in Docker**: The `.local` TLD is reserved for mDNS (multicast DNS). Docker's embedded DNS resolver intercepts `.local` queries and tries mDNS resolution instead of forwarding to Pi-hole.
+
+**Solution**: Always use `.lan` or `.home` TLDs for local DNS entries that need to work from Docker containers.
+
+**Example pihole.toml hosts array**:
+```toml
+hosts = [
+  "192.168.0.141 homeassistant.lan",
+  "192.168.0.141 ha.lan",
+  "192.168.0.100 server.lan"
+]
+```
 
 ---
 
@@ -1005,6 +1076,74 @@ free -h
 
 ---
 
+## Security Issues
+
+### Services accessible without authentication
+
+**Symptoms**: Can access service web interface or API without logging in
+
+**Cause**: Many services default to "Disabled" or "Disabled for Local Addresses" authentication, which is dangerous when exposed via Cloudflare Tunnel.
+
+**Why Cloudflare Tunnel makes this worse**: Traffic through the tunnel appears to come from localhost (the cloudflared container), so "Disabled for Local Addresses" effectively means "Disabled for everyone."
+
+**Affected Services**:
+- **Bazarr**: Defaults to "Disabled" - exposes API key in HTML!
+- **Sonarr/Radarr/Prowlarr**: May default to "Disabled for Local Addresses"
+- **qBittorrent**: Has "Bypass authentication for localhost" option
+- **Homarr**: Requires manual account setup
+- **Uptime Kuma**: Requires manual account setup (forced on first access)
+
+**Solutions**:
+
+1. **Bazarr**:
+   - Settings → General → Security → Authentication: `Forms`
+   - Set username and password
+   - **Regenerate API key** after enabling auth (old key was exposed)
+
+2. **Sonarr/Radarr/Prowlarr**:
+   - Settings → General → Security → Authentication: `Forms`
+   - Authentication Required: `Enabled` (NOT "Disabled for Local Addresses")
+
+3. **qBittorrent**:
+   - Tools → Options → Web UI → Disable "Bypass authentication for localhost"
+
+---
+
+### Bazarr API key exposed in HTML
+
+**Symptoms**: Anyone can view your Bazarr API key by viewing page source
+
+**Cause**: When Bazarr authentication is set to "Disabled", the API key is embedded in the HTML.
+
+**Verification**:
+```bash
+curl -s "https://bazarr.yourdomain.com/" | grep -i "apiKey"
+# If this returns anything, your API key is exposed!
+```
+
+**Solution**:
+1. Enable authentication in Bazarr (Settings → General → Security → Forms)
+2. **Regenerate the API key** (Settings → General → Security → Regenerate)
+3. Update any integrations that use the old API key (Notifiarr, etc.)
+
+---
+
+### Authentication bypass via localhost
+
+**Symptoms**: Services that should require login are accessible without credentials
+
+**Cause**: "Disabled for Local Addresses" auth setting combined with Cloudflare Tunnel
+
+**Explanation**: When using Cloudflare Tunnel, all incoming requests appear to originate from the cloudflared container (localhost/127.0.0.1), which bypasses "local addresses" authentication exceptions.
+
+**Affected settings**:
+- Sonarr/Radarr/Prowlarr: "Authentication Required: Disabled for Local Addresses"
+- qBittorrent: "Bypass authentication for clients on localhost"
+
+**Solution**: Always use full authentication (`Forms` or `Basic`) when exposing services externally, regardless of access method.
+
+---
+
 ## Useful Commands
 
 ### Container Management
@@ -1135,4 +1274,4 @@ When asking for help, include:
 
 ---
 
-**Last Updated**: 2025-11-29
+**Last Updated**: 2025-12-07

@@ -604,6 +604,8 @@ dig @192.168.100.5 -p 53535 google.com
 - ✅ Pi-hole (192.168.100.5) - DNS/Ad-blocking
 - ✅ WireGuard (192.168.100.6) - VPN server
 - ✅ Homarr (192.168.100.7) - Dashboard
+- ✅ Cloudflared (192.168.100.12) - Cloudflare tunnel for external access
+- ✅ Uptime Kuma (192.168.100.13) - Container monitoring and alerts
 
 **Pending**:
 - ⏳ External access (port forwarding not working - likely CGNAT/ISP blocking)
@@ -705,6 +707,102 @@ dig @192.168.100.5 -p 53535 google.com
 
 ---
 
+## Phase 9: Security Configuration
+
+### CRITICAL: Enable Authentication on All Services
+
+**Many services default to NO authentication when exposed externally!** This is a security vulnerability that must be fixed immediately after deployment.
+
+#### 9.1 Bazarr Authentication
+**Status**: ⏳ Required
+
+1. Access: `https://bazarr.yourdomain.com`
+2. Go to: Settings → General → Security
+3. Set **Authentication** to `Forms` (NOT "Disabled")
+4. Set username and password
+5. Click Save
+6. **Regenerate API key** (old key may have been exposed in HTML)
+
+**Why**: Bazarr's default "Disabled" auth exposes the API key in the HTML source code, allowing anyone to access your instance.
+
+---
+
+#### 9.2 Homarr Authentication
+**Status**: ⏳ Required
+
+1. Access: `https://homarr.yourdomain.com`
+2. Complete initial setup wizard
+3. Create admin account with strong password
+4. Go to: Settings → Users
+5. Disable guest access if enabled
+
+---
+
+#### 9.3 Uptime Kuma Authentication
+**Status**: ⏳ Required
+
+1. Access: `https://uptime.yourdomain.com`
+2. On first access, you'll be prompted to create an admin account
+3. Create account with strong password (this step is mandatory)
+4. Optionally enable 2FA in Settings → Security
+
+---
+
+#### 9.4 Sonarr/Radarr/Prowlarr Authentication
+**Status**: ⏳ Check Settings
+
+These apps have authentication but may default to "Disabled for Local Addresses":
+
+1. Access each service
+2. Go to: Settings → General → Security
+3. Set **Authentication** to `Forms` (recommended) or `Basic`
+4. Set **Authentication Required** to `Enabled` (NOT "Disabled for Local Addresses")
+5. Set username and password
+6. Save
+
+**Why "Disabled for Local Addresses" is dangerous with Cloudflare Tunnel**: All traffic through the tunnel appears to come from localhost (the cloudflared container), bypassing authentication!
+
+---
+
+#### 9.5 qBittorrent Authentication
+**Status**: ⏳ Check Settings
+
+1. Access: `https://qbit.yourdomain.com`
+2. Default credentials: `admin` / `adminadmin`
+3. **Immediately change password**: Tools → Options → Web UI → Password
+4. Disable "Bypass authentication for clients on localhost"
+
+---
+
+#### 9.6 Jellyfin Authentication
+**Status**: ✅ Built-in
+
+Jellyfin requires authentication by default (created during initial setup).
+
+---
+
+#### 9.7 Jellyseerr Authentication
+**Status**: ✅ Built-in
+
+Jellyseerr uses Jellyfin authentication by default.
+
+---
+
+### Security Verification Checklist
+
+After configuring auth, verify from an external network (phone on cellular):
+
+```bash
+# Test each service - should NOT return 200 without auth
+curl -sL "https://bazarr.yourdomain.com/api/system/status" | head -20
+curl -sL "https://sonarr.yourdomain.com/api/v3/system/status" | head -20
+curl -sL "https://radarr.yourdomain.com/api/v3/system/status" | head -20
+
+# These should return 401 Unauthorized or redirect to login
+```
+
+---
+
 ## Next Steps After Deployment
 
 1. **Security Hardening**:
@@ -773,4 +871,4 @@ docker compose -f docker-compose.arr-stack.yml up -d <service_name>
 
 ---
 
-**Last Updated**: 2025-11-29
+**Last Updated**: 2025-12-07

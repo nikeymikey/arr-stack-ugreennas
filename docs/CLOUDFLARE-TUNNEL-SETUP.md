@@ -350,26 +350,78 @@ Paid features (optional):
 
 ---
 
-## Alternative: Docker Compose
+## Recommended: Dashboard + Docker (Simplest Method)
 
-You can also run cloudflared as a Docker container:
+This is the easiest approach - configure routes via Cloudflare dashboard and run cloudflared as a Docker container:
+
+### Step 1: Create Tunnel in Cloudflare Dashboard
+
+1. Go to **[Cloudflare Zero Trust](https://one.dash.cloudflare.com/)**
+2. Navigate to **Networks → Connectors → Cloudflare Tunnels**
+3. Click **Create a tunnel**
+4. Choose **Cloudflared** as connector type
+5. Name your tunnel (e.g., `nas-tunnel`)
+6. Copy the **tunnel token** shown
+
+### Step 2: Add to Docker Compose
 
 ```yaml
-# Add to docker-compose.arr-stack.yml
-
+# docker-compose.cloudflared.yml
 services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: cloudflared
     command: tunnel run
     environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+      - TUNNEL_TOKEN=your_tunnel_token_here
     networks:
-      - traefik-proxy
+      traefik-proxy:
+        ipv4_address: 192.168.100.12
     restart: unless-stopped
 ```
 
-Get tunnel token from Cloudflare dashboard → Zero Trust → Tunnels → Configure → Install connector → Docker.
+### Step 3: Configure Routes in Dashboard
+
+1. In Cloudflare Zero Trust, go to **Networks → Connectors → Cloudflare Tunnels**
+2. Click on your tunnel → **Configure**
+3. Go to **Published application routes** tab
+4. Click **Add an application**
+5. For each service, add:
+   - **Subdomain**: `jellyfin` (or service name)
+   - **Domain**: `yourdomain.com`
+   - **Service Type**: `HTTP`
+   - **URL**: `YOUR_NAS_IP:8080` (Traefik port)
+6. Repeat for each service:
+   - `homarr.yourdomain.com` → `YOUR_NAS_IP:8080`
+   - `jellyfin.yourdomain.com` → `YOUR_NAS_IP:8080`
+   - `sonarr.yourdomain.com` → `YOUR_NAS_IP:8080`
+   - `radarr.yourdomain.com` → `YOUR_NAS_IP:8080`
+   - `prowlarr.yourdomain.com` → `YOUR_NAS_IP:8080`
+   - `qbit.yourdomain.com` → `YOUR_NAS_IP:8080`
+   - `jellyseerr.yourdomain.com` → `YOUR_NAS_IP:8080`
+   - `bazarr.yourdomain.com` → `YOUR_NAS_IP:8080`
+   - `pihole.yourdomain.com` → `YOUR_NAS_IP:8080`
+   - `wg.yourdomain.com` → `YOUR_NAS_IP:8080`
+   - `traefik.yourdomain.com` → `YOUR_NAS_IP:8080`
+   - `uptime.yourdomain.com` → `YOUR_NAS_IP:8080`
+
+**Why all point to port 8080?**
+- Traefik listens on port 8080 (mapped from container port 80)
+- Traefik routes based on Host header
+- Cloudflare sends the proper Host header automatically
+
+### Step 4: Deploy
+
+```bash
+cd /volume1/docker/arr-stack
+docker compose -f docker-compose.cloudflared.yml up -d
+```
+
+---
+
+## Alternative: CLI-Based Configuration
+
+For advanced users who prefer config files over dashboard:
 
 ---
 
@@ -382,4 +434,4 @@ Get tunnel token from Cloudflare dashboard → Zero Trust → Tunnels → Config
 
 ---
 
-**Last Updated**: 2025-11-29
+**Last Updated**: 2025-12-07

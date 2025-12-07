@@ -85,22 +85,40 @@ A complete, production-ready Docker Compose stack for automated media management
 ## Project Structure
 
 ```
-arr-stack-ugreennas/
+arr-stack-ugreennas/          # Git repo (source of truth)
 ├── docker-compose.traefik.yml      # Traefik reverse proxy
 ├── docker-compose.arr-stack.yml    # Main media stack
+├── docker-compose.cloudflared.yml  # Cloudflare tunnel
 ├── traefik/                        # Traefik configuration
 │   ├── traefik.yml                 # Static config
 │   └── dynamic/
-│       └── tls.yml                 # TLS settings
+│       ├── tls.yml                 # TLS settings
+│       └── vpn-services.yml        # Service routing
 ├── .env.example                    # Environment template
 ├── .env                            # Your configuration (gitignored)
-├── docs/                           # Documentation
+├── docs/                           # Documentation (git repo only)
 │   ├── README-UGREEN.md
 │   ├── DEPLOYMENT-PLAN.md
 │   ├── DNS-SETUP.md
+│   ├── SERVICE-CONFIGURATION.md
 │   └── TROUBLESHOOTING.md
+├── .claude/instructions.md         # AI assistant instructions
 └── README.md                       # This file
 ```
+
+### NAS Deployment Structure
+
+On the NAS, only operational files are deployed:
+
+```
+/volume1/docker/arr-stack/    # NAS deployment (operational files only)
+├── docker-compose.*.yml      # Compose files
+├── .env                      # Configuration
+├── traefik/                  # Traefik configs
+└── [app-data]/               # Service data directories
+```
+
+**Note**: Documentation and config templates stay in git repo only - not deployed to NAS.
 
 ## Architecture
 
@@ -245,7 +263,22 @@ Common issues:
 - Torrent traffic is VPN-routed (prevents IP leaks)
 - Pi-hole provides DNS-level ad-blocking
 - WireGuard enables secure remote access
-- Consider restricting *arr apps to local/VPN access only
+
+### IMPORTANT: Configure Authentication
+
+**Many services default to NO authentication!** After deployment, you MUST enable authentication on:
+
+| Service | Default Auth | Action Required |
+|---------|--------------|-----------------|
+| Bazarr | Disabled (exposes API key!) | Enable Forms auth, regenerate API key |
+| Sonarr/Radarr/Prowlarr | Disabled for Local Addresses | Set to Forms + Enabled |
+| qBittorrent | Bypass localhost | Disable bypass, change default password |
+| Homarr | None | Create admin account |
+| Uptime Kuma | None | Create admin account (forced on first access) |
+
+**Why this matters with Cloudflare Tunnel**: Traffic through the tunnel appears to come from localhost, bypassing "Disabled for Local Addresses" authentication!
+
+See [Phase 9: Security Configuration](docs/DEPLOYMENT-PLAN.md#phase-9-security-configuration) for detailed instructions.
 
 ## Customization
 
