@@ -6,6 +6,20 @@ A complete, production-ready Docker Compose stack for automated media management
 
 > **Note**: Tested on Ugreen NAS DXP4800+. Should work on other Ugreen models and Docker-compatible NAS devices, but may require adjustments.
 
+## Getting Started with Claude Code (Recommended)
+
+This project works great with [Claude Code](https://claude.ai/claude-code). Instead of manually following the documentation, you can let Claude read the setup guides and walk you through deployment step-by-step.
+
+1. Install Claude Code: `npm install -g @anthropic-ai/claude-code`
+2. Clone this repo and open it: `cd arr-stack-ugreennas && claude`
+3. Ask Claude to help deploy the stack - it reads the [`.claude/instructions.md`](.claude/instructions.md) file automatically
+
+Claude understands the service networking, Traefik routing, deployment order, and common gotchas documented in this project. It can execute commands on your NAS and troubleshoot issues as they arise.
+
+> **Prefer manual setup?** No problem - see [Quick Start](#quick-start) below and the [docs/](docs/) folder for complete documentation.
+
+---
+
 ## Features
 
 - **VPN-routed downloads** via Gluetun + Surfshark
@@ -336,15 +350,3 @@ Initial inspiration from:
 ---
 
 **Need help?** Start with the [README-UGREEN.md](docs/README-UGREEN.md) guide or check [Troubleshooting](docs/TROUBLESHOOTING.md).
-
-## Using Claude Code
-
-This project includes a [`.claude/instructions.md`](.claude/instructions.md) file with project-specific context for [Claude Code](https://claude.ai/claude-code). It documents:
-
-- Service networking rules (VPN routing, localhost vs container names)
-- Traefik routing configuration
-- Pi-hole DNS setup for Docker services
-- Common gotchas (.env quoting, UGOS quirks)
-- Backup and update procedures
-
-Simply open this project in Claude Code and ask questions - the instructions file helps Claude understand this stack's architecture and provide accurate assistance.
