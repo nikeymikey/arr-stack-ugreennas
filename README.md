@@ -15,7 +15,7 @@ A complete, production-ready Docker Compose stack for automated media management
 - **Request management** with Jellyseerr
 - **Remote access** via WireGuard VPN
 - **Ad-blocking DNS** with Pi-hole
-- **Unified dashboard** with Homarr
+- **Service monitoring** with Uptime Kuma
 
 ## Services Included
 
@@ -32,9 +32,8 @@ A complete, production-ready Docker Compose stack for automated media management
 | **Jellyseerr** | Media requests | jellyseerr.yourdomain.com |
 | **Pi-hole** | DNS + Ad-blocking | pihole.yourdomain.com |
 | **WireGuard** | VPN server | wg.yourdomain.com |
-| **Homarr** | Dashboard | homarr.yourdomain.com |
+| **Uptime Kuma** | Service monitoring | uptime.yourdomain.com |
 | **FlareSolverr** | Cloudflare bypass | Internal |
-| **Notifiarr** | Notifications | notifiarr.yourdomain.com |
 
 ## Quick Start
 
@@ -166,7 +165,7 @@ See [Architecture section in README-UGREEN.md](docs/README-UGREEN.md#why-three-s
     └── arr-stack/          # Application configs
         ├── gluetun-config/
         ├── traefik/
-        ├── homarr/
+        ├── uptime-kuma/
         └── ...
 ```
 
@@ -219,7 +218,7 @@ docker compose -f docker-compose.arr-stack.yml up -d gluetun
 docker compose -f docker-compose.arr-stack.yml up -d qbittorrent
 docker compose -f docker-compose.arr-stack.yml up -d sonarr radarr prowlarr
 docker compose -f docker-compose.arr-stack.yml up -d jellyfin jellyseerr bazarr
-docker compose -f docker-compose.arr-stack.yml up -d pihole wg-easy homarr
+docker compose -f docker-compose.arr-stack.yml up -d pihole wg-easy uptime-kuma
 ```
 
 ## Updating
@@ -273,7 +272,6 @@ Common issues:
 | Bazarr | Disabled (exposes API key!) | Enable Forms auth, regenerate API key |
 | Sonarr/Radarr/Prowlarr | Disabled for Local Addresses | Set to Forms + Enabled |
 | qBittorrent | Bypass localhost | Disable bypass, change default password |
-| Homarr | None | Create admin account |
 | Uptime Kuma | None | Create admin account (forced on first access) |
 
 **Why this matters with Cloudflare Tunnel**: Traffic through the tunnel appears to come from localhost, bypassing "Disabled for Local Addresses" authentication!
@@ -326,7 +324,7 @@ Built with:
 
 Initial inspiration from:
 - [Master the *arr Stack](https://www.youtube.com/watch?v=wMs8Ry9oFdc) - Basic arr stack setup
-- [Complete Your arr Stack](https://www.youtube.com/watch?v=oaQD-d2kg-I) - Additional services (Bazarr, Jellyseerr, Notifiarr, FlareSolverr)
+- [Complete Your arr Stack](https://www.youtube.com/watch?v=oaQD-d2kg-I) - Additional services (Bazarr, Jellyseerr, FlareSolverr)
 
 **Note**: This project has been significantly extended beyond the original tutorials with:
 - Ugreen NAS DXP4800+-specific configuration and testing
@@ -338,3 +336,14 @@ Initial inspiration from:
 ---
 
 **Need help?** Start with the [README-UGREEN.md](docs/README-UGREEN.md) guide or check [Troubleshooting](docs/TROUBLESHOOTING.md).
+
+## Using Claude Code
+
+This project includes a `.claude/instructions.md` file with detailed context for [Claude Code](https://claude.ai/claude-code). If you're using Claude Code, it can guide you through:
+
+- Initial setup and configuration
+- Troubleshooting network and DNS issues
+- Adding new services to the stack
+- Debugging service connectivity problems
+
+Simply open this project in Claude Code and ask questions - the instructions file provides project-specific context for accurate assistance.
