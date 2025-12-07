@@ -339,11 +339,12 @@ Initial inspiration from:
 
 ## Using Claude Code
 
-This project includes a `.claude/instructions.md` file with detailed context for [Claude Code](https://claude.ai/claude-code). If you're using Claude Code, it can guide you through:
+This project includes a [`.claude/instructions.md`](.claude/instructions.md) file with project-specific context for [Claude Code](https://claude.ai/claude-code). It documents:
 
-- Initial setup and configuration
-- Troubleshooting network and DNS issues
-- Adding new services to the stack
-- Debugging service connectivity problems
+- Service networking rules (VPN routing, localhost vs container names)
+- Traefik routing configuration
+- Pi-hole DNS setup for Docker services
+- Common gotchas (.env quoting, UGOS quirks)
+- Backup and update procedures
 
-Simply open this project in Claude Code and ask questions - the instructions file provides project-specific context for accurate assistance.
+Simply open this project in Claude Code and ask questions - the instructions file helps Claude understand this stack's architecture and provide accurate assistance.

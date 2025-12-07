@@ -1,6 +1,5 @@
 # Environment & Secrets
 .env
-.claude/
 *.key
 *.pem
 *.crt
