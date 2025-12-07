@@ -110,7 +110,7 @@ tunnel: <YOUR_TUNNEL_ID>
 credentials-file: /home/your-username/.cloudflared/<YOUR_TUNNEL_ID>.json
 
 ingress:
-  # Homarr dashboard
+  # Uptime Kuma dashboard
   - hostname: yourdomain.com
     service: http://YOUR_NAS_IP:8080
     originRequest:
@@ -170,12 +170,6 @@ ingress:
     originRequest:
       noTLSVerify: true
 
-  # Homarr
-  - hostname: homarr.yourdomain.com
-    service: http://YOUR_NAS_IP:8080
-    originRequest:
-      noTLSVerify: true
-
   # Traefik dashboard
   - hostname: traefik.yourdomain.com
     service: http://YOUR_NAS_IP:8080
@@ -208,7 +202,7 @@ cloudflared tunnel route dns your-tunnel jellyseerr.yourdomain.com
 cloudflared tunnel route dns your-tunnel bazarr.yourdomain.com
 cloudflared tunnel route dns your-tunnel pihole.yourdomain.com
 cloudflared tunnel route dns your-tunnel wg.yourdomain.com
-cloudflared tunnel route dns your-tunnel homarr.yourdomain.com
+cloudflared tunnel route dns your-tunnel uptime.yourdomain.com
 cloudflared tunnel route dns your-tunnel traefik.yourdomain.com
 ```
 
@@ -392,7 +386,6 @@ services:
    - **Service Type**: `HTTP`
    - **URL**: `YOUR_NAS_IP:8080` (Traefik port)
 6. Repeat for each service:
-   - `homarr.yourdomain.com` → `YOUR_NAS_IP:8080`
    - `jellyfin.yourdomain.com` → `YOUR_NAS_IP:8080`
    - `sonarr.yourdomain.com` → `YOUR_NAS_IP:8080`
    - `radarr.yourdomain.com` → `YOUR_NAS_IP:8080`

@@ -24,7 +24,6 @@ Complete guide for configuring all services in the media automation stack after 
 | Prowlarr | ✅ Auth enabled | Shows login page |
 | qBittorrent | ✅ Auth enabled | Shows login page |
 | Bazarr | ✅ Auth enabled | Forms auth configured |
-| Homarr | ✅ Auth enabled | Admin account created |
 | Uptime Kuma | ✅ Auth enabled | Admin account created |
 | Pi-hole | ✅ Auth enabled | Password from .env |
 | WireGuard | ✅ Auth enabled | Password hash from .env |
@@ -41,11 +40,9 @@ Complete guide for configuring all services in the media automation stack after 
 | Jellyfin | ✅ Done | Libraries configured |
 | Jellyseerr | ✅ Done | Linked to Jellyfin, Sonarr, Radarr |
 | Bazarr | ✅ Done | Linked to Sonarr/Radarr, providers configured |
-| Homarr | ✅ Done | Dashboard with all services (v1.x) |
 | Uptime Kuma | ✅ Done | Monitors configured (v2.x) |
 | Pi-hole | ⏳ Optional | Custom DNS, ad lists |
 | WireGuard | ⏳ Optional | Create client configs |
-| Notifiarr | ❌ Skip | Optional (media notifications) |
 
 ---
 
@@ -66,11 +63,9 @@ Complete guide for configuring all services in the media automation stack after 
        ↓
 6. Bazarr (needs Sonarr + Radarr)
        ↓
-7. Homarr (dashboard - add all services)
+7. Uptime Kuma (monitoring - add all services)
        ↓
-8. Uptime Kuma (monitoring - add all services)
-       ↓
-9. Pi-hole & WireGuard (optional, independent)
+8. Pi-hole & WireGuard (optional, independent)
 ```
 
 ---
@@ -304,40 +299,7 @@ Complete guide for configuring all services in the media automation stack after 
 
 ---
 
-### 8. Homarr (Dashboard)
-
-**URL**: https://homarr.moosenas.cc
-
-#### Steps:
-1. Login (you created an account earlier)
-2. **Add Services**:
-   - Click "Edit Mode" (pencil icon)
-   - Add Widget → Apps
-   - Add each service with its URL:
-
-| App | URL | Icon |
-|-----|-----|------|
-| Jellyfin | https://jellyfin.moosenas.cc | jellyfin |
-| Jellyseerr | https://jellyseerr.moosenas.cc | jellyseerr |
-| Sonarr | https://sonarr.moosenas.cc | sonarr |
-| Radarr | https://radarr.moosenas.cc | radarr |
-| Prowlarr | https://prowlarr.moosenas.cc | prowlarr |
-| Bazarr | https://bazarr.moosenas.cc | bazarr |
-| qBittorrent | https://qbit.moosenas.cc | qbittorrent |
-| Pi-hole | https://pihole.moosenas.cc/admin | pihole |
-| WireGuard | https://wg.moosenas.cc | wireguard |
-| Traefik | https://traefik.moosenas.cc | traefik |
-| Uptime Kuma | https://uptime.moosenas.cc | uptimekuma |
-
-3. **Optional - Add Integrations**:
-   - Some widgets support API integration (Pi-hole, *arr apps)
-   - Add API keys for live stats
-4. **Save Layout**:
-   - Click "Save" when done editing
-
----
-
-### 9. Uptime Kuma (Monitoring)
+### 7. Uptime Kuma (Monitoring)
 
 **URL**: https://uptime.moosenas.cc
 
@@ -413,7 +375,6 @@ HTTP monitors verify services actually respond, not just that containers are run
 | `http://jellyseerr:5055/api/v1/status` | Jellyseerr |
 | `http://bazarr:6767/ping` | Bazarr |
 | `http://pihole:80/admin` | Pi-hole |
-| `http://homarr:7575` | Homarr |
 | `http://flaresolverr:8191` | FlareSolverr |
 | `http://homeassistant.lan:8123` | Home Assistant |
 
@@ -437,7 +398,7 @@ For each:
 
 ---
 
-### 10. Pi-hole (Optional)
+### 8. Pi-hole (Optional)
 
 **URL**: https://pihole.moosenas.cc/admin
 
@@ -455,7 +416,7 @@ For each:
 
 ---
 
-### 11. WireGuard (Optional)
+### 9. WireGuard (Optional)
 
 **URL**: https://wg.moosenas.cc
 
@@ -475,9 +436,9 @@ For each:
 
 ---
 
-### 12. Home Assistant Notifications (Optional)
+### 10. Home Assistant Notifications (Optional)
 
-Send notifications from Sonarr/Radarr/etc directly to Home Assistant (no Notifiarr needed).
+Send notifications from Sonarr/Radarr/etc directly to Home Assistant using webhooks.
 
 #### Step 1: Create HA Automation
 
@@ -564,7 +525,6 @@ After configuration, verify the workflow:
 - [ ] Jellyfin shows media libraries
 - [ ] Jellyseerr can search and request media
 - [ ] Bazarr connected to Sonarr/Radarr
-- [ ] Homarr dashboard shows all services
 - [ ] Uptime Kuma monitors are green
 
 ### Test the Full Workflow:

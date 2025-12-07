@@ -743,11 +743,9 @@ services:
 - 192.168.100.4: Jellyfin
 - 192.168.100.5: Pi-hole
 - 192.168.100.6: WireGuard
-- 192.168.100.7: Homarr
 - 192.168.100.8: Jellyseerr
 - 192.168.100.9: Bazarr
 - 192.168.100.10: FlareSolverr
-- 192.168.100.11: Notifiarr
 - 192.168.100.12: Cloudflared
 - 192.168.100.13: Uptime Kuma
 
@@ -1090,7 +1088,6 @@ free -h
 - **Bazarr**: Defaults to "Disabled" - exposes API key in HTML!
 - **Sonarr/Radarr/Prowlarr**: May default to "Disabled for Local Addresses"
 - **qBittorrent**: Has "Bypass authentication for localhost" option
-- **Homarr**: Requires manual account setup
 - **Uptime Kuma**: Requires manual account setup (forced on first access)
 
 **Solutions**:
@@ -1124,7 +1121,7 @@ curl -s "https://bazarr.yourdomain.com/" | grep -i "apiKey"
 **Solution**:
 1. Enable authentication in Bazarr (Settings → General → Security → Forms)
 2. **Regenerate the API key** (Settings → General → Security → Regenerate)
-3. Update any integrations that use the old API key (Notifiarr, etc.)
+3. Update any integrations that use the old API key
 
 ---
 

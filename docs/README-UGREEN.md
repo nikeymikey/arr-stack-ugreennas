@@ -26,7 +26,7 @@ This stack provides a complete media automation solution with:
 - **Request management** (Jellyseerr)
 - **Remote access** (WireGuard VPN)
 - **Ad-blocking DNS** (Pi-hole)
-- **Unified dashboard** (Homarr)
+- **Service monitoring** (Uptime Kuma)
 
 ### Services Included
 
@@ -43,9 +43,8 @@ This stack provides a complete media automation solution with:
 | **Jellyseerr** | Request management | jellyseerr.yourdomain.com | your-nas.local:5055 |
 | **Pi-hole** | DNS + Ad blocking | pihole.yourdomain.com | your-nas.local:80 |
 | **WireGuard** | VPN server | wg.yourdomain.com | - |
-| **Homarr** | Dashboard | homarr.yourdomain.com | your-nas.local:3000 |
+| **Uptime Kuma** | Service monitoring | uptime.yourdomain.com | your-nas.local:3001 |
 | **FlareSolverr** | Cloudflare bypass | flaresolverr.yourdomain.com | - |
-| **Notifiarr** | Notifications | notifiarr.yourdomain.com | - |
 
 ### Local Network Access
 
@@ -55,7 +54,7 @@ For devices on your home network (FireTV, phones, tablets), use the local URLs f
 |---------|-----------|-------|
 | **Jellyfin** | `http://your-nas.local:8096` | Media streaming |
 | **Jellyseerr** | `http://your-nas.local:5055` | Request content |
-| **Homarr** | `http://your-nas.local:3000` | Dashboard |
+| **Uptime Kuma** | `http://your-nas.local:3001` | Monitoring |
 | **Pi-hole** | `http://your-nas.local:80` | DNS admin |
 
 **Why use local URLs?**
@@ -105,7 +104,7 @@ Internet
     │                                │   ├─► Jellyfin (.4)
     │                                │   ├─► Pi-hole (.5)
     │                                │   ├─► WireGuard (.6)
-    │                                │   ├─► Homarr (.7)
+    │                                │   ├─► Uptime Kuma (.13)
     │                                │   └─► Other services
     │                                │
     │                                └─► Gluetun (.3) ◄─── VPN Connection (Surfshark)
@@ -180,11 +179,6 @@ Because of this separation:
         ├── gluetun-config/
         ├── jellyseerr/config/
         ├── bazarr/config/
-        ├── notifiarr/
-        ├── homarr/
-        │   ├── configs/
-        │   ├── icons/
-        │   └── data/
         └── traefik/
             ├── traefik.yml
             ├── acme.json
@@ -261,7 +255,7 @@ nano .env
 ssh user@nas-ip
 
 # Create directories
-sudo mkdir -p /volume1/docker/arr-stack/{gluetun-config,jellyseerr/config,bazarr/config,notifiarr,homarr/{configs,icons,data},traefik/dynamic}
+sudo mkdir -p /volume1/docker/arr-stack/{gluetun-config,jellyseerr/config,bazarr/config,traefik/dynamic}
 sudo mkdir -p /volume1/Media/{downloads,tv,movies}
 
 # Set permissions
@@ -316,13 +310,13 @@ docker compose -f docker-compose.arr-stack.yml up -d gluetun
 docker compose -f docker-compose.arr-stack.yml up -d qbittorrent
 docker compose -f docker-compose.arr-stack.yml up -d sonarr radarr prowlarr
 docker compose -f docker-compose.arr-stack.yml up -d jellyfin jellyseerr bazarr
-docker compose -f docker-compose.arr-stack.yml up -d pihole wg-easy homarr
-docker compose -f docker-compose.arr-stack.yml up -d flaresolverr notifiarr
+docker compose -f docker-compose.arr-stack.yml up -d pihole wg-easy uptime-kuma
+docker compose -f docker-compose.arr-stack.yml up -d flaresolverr
 ```
 
 ### 9. Access Services
 
-Visit `https://homarr.yourdomain.com` for the main dashboard.
+Visit `https://uptime.yourdomain.com` for the monitoring dashboard.
 
 ---
 
@@ -884,76 +878,11 @@ Apple devices may show "This network is blocking iCloud Private Relay" when usin
    - Connect
 
 6. **Verify**:
-   - While connected, access: `https://homarr.yourdomain.com`
+   - While connected, access: `https://uptime.yourdomain.com`
    - Should work even without external DNS (using internal IP)
 
 ---
 
-### Homarr Configuration
-
-1. **Access**: `https://homarr.yourdomain.com`
-
-2. **Add Services**:
-   - Click "Edit" (top right)
-   - Add Widget → Service
-   - Add each service:
-
-   | Service | URL | Icon |
-   |---------|-----|------|
-   | Jellyfin | https://jellyfin.yourdomain.com | jellyfin.png |
-   | Jellyseerr | https://jellyseerr.yourdomain.com | jellyseerr.png |
-   | Sonarr | https://sonarr.yourdomain.com | sonarr.png |
-   | Radarr | https://radarr.yourdomain.com | radarr.png |
-   | Prowlarr | https://prowlarr.yourdomain.com | prowlarr.png |
-   | Bazarr | https://bazarr.yourdomain.com | bazarr.png |
-   | qBittorrent | https://qbit.yourdomain.com | qbittorrent.png |
-   | Pi-hole | https://pihole.yourdomain.com/admin | pihole.png |
-   | WireGuard | https://wg.yourdomain.com | wireguard.png |
-
-3. **API Integration** (optional):
-   - For each service, enable API integration
-   - Add API keys to show stats on dashboard
-
-4. **Customize Layout**:
-   - Drag and drop widgets
-   - Resize as needed
-   - Save changes
-
----
-
-### Notifiarr Configuration
-
-1. **Download Config**:
-   ```bash
-   wget https://raw.githubusercontent.com/Notifiarr/notifiarr/main/examples/notifiarr.conf.example
-   mv notifiarr.conf.example /volume1/docker/arr-stack/notifiarr/notifiarr.conf
-   ```
-
-2. **Get API Key**:
-   - Register at: https://notifiarr.com
-   - Copy API key
-
-3. **Edit Config**:
-   ```bash
-   nano /volume1/docker/arr-stack/notifiarr/notifiarr.conf
-   ```
-
-   Update:
-   - `api_key`: Your Notifiarr API key
-   - Sonarr/Radarr/etc URLs and API keys
-
-4. **Restart Notifiarr**:
-   ```bash
-   docker compose -f docker-compose.arr-stack.yml restart notifiarr
-   ```
-
-5. **Configure Webhooks**:
-   - In Sonarr/Radarr:
-   - Settings → Connect → Add → Webhook
-   - URL: `http://notifiarr:5454/api/v1/notification/sonarr` (or radarr)
-   - Method: POST
-
----
 
 ## Maintenance
 
@@ -991,8 +920,6 @@ tar czf arr-stack-config-backup.tar.gz \
   /volume1/docker/arr-stack/gluetun-config \
   /volume1/docker/arr-stack/jellyseerr \
   /volume1/docker/arr-stack/bazarr \
-  /volume1/docker/arr-stack/notifiarr \
-  /volume1/docker/arr-stack/homarr \
   /volume1/docker/arr-stack/traefik
 ```
 

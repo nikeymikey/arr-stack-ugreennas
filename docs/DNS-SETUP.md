@@ -331,7 +331,7 @@ All records should look like this:
 Type    Name          Content              Proxy Status    TTL
 A       @             203.0.113.50         DNS only        Auto
 CNAME   traefik       yourdomain.com    DNS only        Auto
-CNAME   homarr        yourdomain.com    DNS only        Auto
+CNAME   uptime        yourdomain.com    DNS only        Auto
 CNAME   jellyfin      yourdomain.com    DNS only        Auto
 ... (etc for all services)
 ```
@@ -349,6 +349,7 @@ dig yourdomain.com +short
 
 # Check CNAME records
 dig traefik.yourdomain.com +short
+dig uptime.yourdomain.com +short
 dig jellyfin.yourdomain.com +short
 # Should return: yourdomain.com OR YOUR_PUBLIC_IP
 ```
@@ -368,7 +369,7 @@ dig jellyfin.yourdomain.com +short
 All subdomains should resolve to your public IP address:
 ```
 traefik.yourdomain.com    → 203.0.113.50
-homarr.yourdomain.com     → 203.0.113.50
+uptime.yourdomain.com     → 203.0.113.50
 jellyfin.yourdomain.com   → 203.0.113.50
 ... (etc)
 ```
@@ -527,8 +528,8 @@ Content: YOUR_PUBLIC_IP
 Proxy: DNS only ✅
 
 Record Type: CNAME (for each service)
-Names: traefik, homarr, jellyfin, jellyseerr, sonarr, radarr, prowlarr,
-       bazarr, qbit, pihole, wg, flaresolverr, notifiarr
+Names: traefik, uptime, jellyfin, jellyseerr, sonarr, radarr, prowlarr,
+       bazarr, qbit, pihole, wg, flaresolverr
 Target: @
 Proxy: DNS only ✅
 ```

@@ -87,7 +87,7 @@ sudo systemctl restart nginx
 ssh your-username@ugreen-nas-ip
 
 # Create directory structure
-sudo mkdir -p /volume1/docker/arr-stack/{gluetun-config,jellyseerr/config,bazarr/config,notifiarr,homarr/{configs,icons,data},traefik/dynamic}
+sudo mkdir -p /volume1/docker/arr-stack/{gluetun-config,jellyseerr/config,bazarr/config,traefik/dynamic}
 sudo mkdir -p /volume1/Media/{downloads,tv,movies}
 
 # Set permissions
@@ -386,10 +386,8 @@ docker compose -f docker-compose.arr-stack.yml up -d bazarr
 **Status**: ⏳ Pending
 
 ```bash
-docker compose -f docker-compose.arr-stack.yml up -d flaresolverr notifiarr
+docker compose -f docker-compose.arr-stack.yml up -d flaresolverr
 ```
-
-**Note**: Notifiarr requires manual config file setup (see README-UGREEN.md)
 
 ---
 
@@ -425,16 +423,16 @@ docker compose -f docker-compose.arr-stack.yml up -d wg-easy
 
 ---
 
-### 5.3 Deploy Homarr (Dashboard)
+### 5.3 Deploy Uptime Kuma (Monitoring)
 **Status**: ⏳ Pending
 
 ```bash
-docker compose -f docker-compose.arr-stack.yml up -d homarr
+docker compose -f docker-compose.arr-stack.yml up -d uptime-kuma
 ```
 
-**Access**: `https://homarr.yourdomain.com`
+**Access**: `https://uptime.yourdomain.com`
 
-**Configuration**: Add all services to dashboard (see README-UGREEN.md)
+**Configuration**: Add all services to monitoring (see SERVICE-CONFIGURATION.md)
 
 ---
 
@@ -551,7 +549,7 @@ Check all services have valid SSL:
 - [ ] bazarr.yourdomain.com
 - [ ] pihole.yourdomain.com
 - [ ] wg.yourdomain.com
-- [ ] homarr.yourdomain.com
+- [ ] uptime.yourdomain.com
 
 ---
 
@@ -600,12 +598,10 @@ dig @192.168.100.5 -p 53535 google.com
 - ✅ Jellyseerr (192.168.100.8) - Request manager
 - ✅ Bazarr (192.168.100.9) - Subtitle manager
 - ✅ FlareSolverr (192.168.100.10) - Cloudflare bypass
-- ✅ Notifiarr (192.168.100.11) - Notifications
 - ✅ Pi-hole (192.168.100.5) - DNS/Ad-blocking
 - ✅ WireGuard (192.168.100.6) - VPN server
-- ✅ Homarr (192.168.100.7) - Dashboard
 - ✅ Cloudflared (192.168.100.12) - Cloudflare tunnel for external access
-- ✅ Uptime Kuma (192.168.100.13) - Container monitoring and alerts
+- ✅ Uptime Kuma (192.168.100.13) - Service monitoring and alerts
 
 **Pending**:
 - ⏳ External access (port forwarding not working - likely CGNAT/ISP blocking)
@@ -622,8 +618,8 @@ dig @192.168.100.5 -p 53535 google.com
 ### Issues Encountered
 
 1. **IP Address Conflicts**
-   - **Problem**: Notifiarr auto-assigned 192.168.100.2 (Traefik's reserved IP)
-   - **Impact**: Traefik, Jellyfin, and Homarr couldn't start
+   - **Problem**: Container auto-assigned 192.168.100.2 (Traefik's reserved IP)
+   - **Impact**: Traefik and other services couldn't start
    - **Solution**: Assigned static IPs to ALL services on traefik-proxy network
    - **Lesson**: Always use static IPs when mixing static and dynamic assignments
 
@@ -727,16 +723,6 @@ dig @192.168.100.5 -p 53535 google.com
 
 ---
 
-#### 9.2 Homarr Authentication
-**Status**: ⏳ Required
-
-1. Access: `https://homarr.yourdomain.com`
-2. Complete initial setup wizard
-3. Create admin account with strong password
-4. Go to: Settings → Users
-5. Disable guest access if enabled
-
----
 
 #### 9.3 Uptime Kuma Authentication
 **Status**: ⏳ Required
@@ -834,7 +820,7 @@ curl -sL "https://radarr.yourdomain.com/api/v3/system/status" | head -20
 | Service | URL |
 |---------|-----|
 | Traefik Dashboard | https://traefik.yourdomain.com:8080 |
-| Homarr (Main Dashboard) | https://homarr.yourdomain.com |
+| Uptime Kuma (Monitoring) | https://uptime.yourdomain.com |
 | Jellyfin | https://jellyfin.yourdomain.com |
 | Jellyseerr | https://jellyseerr.yourdomain.com |
 | qBittorrent | https://qbit.yourdomain.com |
