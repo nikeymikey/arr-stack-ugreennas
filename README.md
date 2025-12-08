@@ -8,7 +8,7 @@ A complete, production-ready Docker Compose stack for automated media management
 
 ## Legal Notice
 
-This project provides configuration files for **legal, open-source software** designed for managing personal media libraries. All included tools have legitimate purposes - see **[LEGAL.md](LEGAL.md)** for details on intended use, user responsibilities, and disclaimer.
+This project provides configuration files for **legal, open-source software** designed for managing personal media libraries. All included tools have legitimate purposes - see **[LEGAL.md](docs/LEGAL.md)** for details on intended use, user responsibilities, and disclaimer.
 
 ---
 
