@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-Common issues and solutions for the media automation stack.
+Common issues and solutions for the media library management stack.
 
 ## Table of Contents
 
@@ -440,7 +440,7 @@ docker exec gluetun wget -qO- ifconfig.me
 
 ---
 
-### VPN IP leak detected
+### VPN connection not routing traffic
 
 **Symptoms**: IP check shows home IP instead of VPN IP
 
@@ -457,16 +457,15 @@ docker exec qbittorrent wget -qO- ifconfig.me
 
 1. **Kill switch not working**:
    - Gluetun has built-in kill switch
-   - If leaking, check firewall settings in Gluetun
+   - Check firewall settings in Gluetun
 
 2. **Service not using Gluetun network**:
    - Verify `network_mode: "service:gluetun"` in docker-compose
    - Recreate container
 
-3. **Use ipleak.net torrent test**:
-   - Download test torrent: https://ipleak.net/
-   - Add to qBittorrent
-   - Check IP on ipleak.net (should show VPN IP)
+3. **Verify VPN is active**:
+   - Check Gluetun logs: `docker logs gluetun`
+   - Look for "Connected to VPN" message
 
 ---
 
@@ -627,7 +626,7 @@ docker exec qbittorrent curl -f http://localhost:8085/
 
 ### FlareSolverr not working
 
-**Symptoms**: Cloudflare-protected indexers failing
+**Symptoms**: CAPTCHA-protected sites failing
 
 **Solutions**:
 
@@ -636,7 +635,7 @@ docker exec qbittorrent curl -f http://localhost:8085/
    - Host: `http://flaresolverr:8191`
    - Tags: `flaresolverr`
 
-2. **Indexer not tagged**:
+2. **Site not tagged**:
    - Edit indexer in Prowlarr
    - Add tag: `flaresolverr`
 

@@ -18,10 +18,10 @@ A production-ready Docker Compose stack for media automation, featuring VPN rout
 
 ## Overview
 
-This stack provides a complete media automation solution with:
-- **VPN-routed downloading** (Gluetun + Surfshark)
+This stack provides a complete media library management solution with:
+- **VPN-protected networking** (Gluetun + Surfshark)
 - **SSL/TLS certificates** (Traefik + Cloudflare)
-- **Media management** (Sonarr, Radarr, Prowlarr, Bazarr)
+- **Media library organization** (Sonarr, Radarr, Prowlarr, Bazarr)
 - **Media streaming** (Jellyfin)
 - **Request management** (Jellyseerr)
 - **Remote access** (WireGuard VPN)
@@ -33,18 +33,18 @@ This stack provides a complete media automation solution with:
 | Service | Purpose | External URL | Local URL |
 |---------|---------|--------------|-----------|
 | **Traefik** | Reverse proxy + SSL | traefik.yourdomain.com | - |
-| **Gluetun** | VPN gateway | (Internal) | - |
-| **qBittorrent** | Download client | qbit.yourdomain.com | - |
-| **Sonarr** | TV show management | sonarr.yourdomain.com | - |
-| **Radarr** | Movie management | radarr.yourdomain.com | - |
-| **Prowlarr** | Indexer manager | prowlarr.yourdomain.com | - |
+| **Gluetun** | VPN gateway for privacy | (Internal) | - |
+| **qBittorrent** | BitTorrent client | qbit.yourdomain.com | - |
+| **Sonarr** | TV show library management | sonarr.yourdomain.com | - |
+| **Radarr** | Movie library management | radarr.yourdomain.com | - |
+| **Prowlarr** | Search aggregator | prowlarr.yourdomain.com | - |
 | **Bazarr** | Subtitle management | bazarr.yourdomain.com | - |
-| **Jellyfin** | Media server | jellyfin.yourdomain.com | your-nas.local:8096 |
-| **Jellyseerr** | Request management | jellyseerr.yourdomain.com | your-nas.local:5055 |
+| **Jellyfin** | Media streaming server | jellyfin.yourdomain.com | your-nas.local:8096 |
+| **Jellyseerr** | Media request system | jellyseerr.yourdomain.com | your-nas.local:5055 |
 | **Pi-hole** | DNS + Ad blocking | pihole.yourdomain.com | your-nas.local:80 |
 | **WireGuard** | VPN server | wg.yourdomain.com | - |
 | **Uptime Kuma** | Service monitoring | uptime.yourdomain.com | your-nas.local:3001 |
-| **FlareSolverr** | Cloudflare bypass | flaresolverr.yourdomain.com | - |
+| **FlareSolverr** | CAPTCHA solver | flaresolverr.yourdomain.com | - |
 
 ### Local Network Access
 
@@ -70,17 +70,17 @@ For devices on your home network (FireTV, phones, tablets), use the local URLs f
 
 ### Security
 - All services behind SSL/TLS (automatic certificates via Let's Encrypt)
-- VPN routing for torrenting services (prevent IP leaks)
+- VPN routing for network privacy
 - Pi-hole for ad-blocking and DNS security
 - WireGuard for secure remote access
 - Security headers via Traefik middleware
 
-### Automation
-- Automatic TV show and movie downloads
-- Subtitle downloads (Bazarr)
+### Library Management
+- Automated media organization and renaming
+- Subtitle management (Bazarr)
 - Media requests via Jellyseerr
-- Automatic indexer management (Prowlarr)
-- Cloudflare bypass for protected indexers (FlareSolverr)
+- Search aggregation (Prowlarr)
+- CAPTCHA solving for protected sites (FlareSolverr)
 
 ### Reliability
 - Health checks for all services
@@ -997,7 +997,7 @@ See TROUBLESHOOTING.md → "Can't access services externally" for detailed solut
 
 Remove Traefik labels from services you want local-only, or add authentication middleware.
 
-### Q: Downloads aren't working?
+### Q: qBittorrent not connecting?
 
 1. Check VPN connection: `docker logs gluetun`
 2. Verify qBittorrent can reach internet: `docker exec qbittorrent wget -qO- ifconfig.me`

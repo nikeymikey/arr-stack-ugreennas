@@ -6,6 +6,12 @@ A complete, production-ready Docker Compose stack for automated media management
 
 > **Note**: Tested on Ugreen NAS DXP4800+. Should work on other Ugreen models and Docker-compatible NAS devices, but may require adjustments.
 
+## Legal Notice
+
+This project provides configuration files for **legal, open-source software** designed for managing personal media libraries. All included tools have legitimate purposes - see **[LEGAL.md](LEGAL.md)** for details on intended use, user responsibilities, and disclaimer.
+
+---
+
 ## Getting Started with Claude Code (Recommended)
 
 This project works great with [Claude Code](https://claude.ai/claude-code). Instead of manually following the documentation, you can let Claude read the setup guides and walk you through deployment step-by-step.
@@ -22,9 +28,9 @@ Claude understands the service networking, Traefik routing, deployment order, an
 
 ## Features
 
-- **VPN-routed downloads** via Gluetun + Surfshark
+- **VPN-protected networking** via Gluetun + Surfshark for privacy
 - **Automated SSL/TLS** certificates via Traefik + Cloudflare
-- **Media automation** with Sonarr, Radarr, Prowlarr, Bazarr
+- **Media library management** with Sonarr, Radarr, Prowlarr, Bazarr
 - **Media streaming** with Jellyfin
 - **Request management** with Jellyseerr
 - **Remote access** via WireGuard VPN
@@ -36,18 +42,18 @@ Claude understands the service networking, Traefik routing, deployment order, an
 | Service | Description | Port/URL |
 |---------|-------------|----------|
 | **Traefik** | Reverse proxy with automatic SSL | traefik.yourdomain.com |
-| **Gluetun** | VPN gateway (Surfshark) | Internal |
-| **qBittorrent** | Torrent client (VPN-routed) | qbit.yourdomain.com |
-| **Sonarr** | TV show automation | sonarr.yourdomain.com |
-| **Radarr** | Movie automation | radarr.yourdomain.com |
-| **Prowlarr** | Indexer manager | prowlarr.yourdomain.com |
-| **Bazarr** | Subtitle automation | bazarr.yourdomain.com |
-| **Jellyfin** | Media server | jellyfin.yourdomain.com |
-| **Jellyseerr** | Media requests | jellyseerr.yourdomain.com |
+| **Gluetun** | VPN gateway for network privacy | Internal |
+| **qBittorrent** | BitTorrent client | qbit.yourdomain.com |
+| **Sonarr** | TV show library management | sonarr.yourdomain.com |
+| **Radarr** | Movie library management | radarr.yourdomain.com |
+| **Prowlarr** | Search aggregator | prowlarr.yourdomain.com |
+| **Bazarr** | Subtitle management | bazarr.yourdomain.com |
+| **Jellyfin** | Media streaming server | jellyfin.yourdomain.com |
+| **Jellyseerr** | Media request system | jellyseerr.yourdomain.com |
 | **Pi-hole** | DNS + Ad-blocking | pihole.yourdomain.com |
-| **WireGuard** | VPN server | wg.yourdomain.com |
+| **WireGuard** | VPN server for remote access | wg.yourdomain.com |
 | **Uptime Kuma** | Service monitoring | uptime.yourdomain.com |
-| **FlareSolverr** | Cloudflare bypass | Internal |
+| **FlareSolverr** | CAPTCHA solver | Internal |
 
 ## Quick Start
 
@@ -145,7 +151,7 @@ Internet → Port 80/443 → Traefik (Reverse Proxy)
                             └─► Gluetun (VPN Gateway)
                                     │
                                     └─► qBittorrent, Sonarr, Radarr, Prowlarr
-                                        (VPN-routed for privacy)
+                                        (Privacy-protected services)
 ```
 
 ### Three-File Architecture
@@ -268,12 +274,12 @@ Common issues:
 - VPN not connecting → Check Surfshark credentials
 - SSL certificates not working → Verify Cloudflare API token
 - Services not accessible → Check port forwarding (80, 443)
-- Downloads not working → Verify Gluetun VPN connection
+- VPN services unreachable → Verify Gluetun connection
 
 ## Security Considerations
 
 - All services use HTTPS with automatic SSL certificates
-- Torrent traffic is VPN-routed (prevents IP leaks)
+- Network traffic routed through VPN for privacy
 - Pi-hole provides DNS-level ad-blocking
 - WireGuard enables secure remote access
 
@@ -336,11 +342,13 @@ Built with:
 
 ## References
 
-Initial inspiration from:
-- [Master the *arr Stack](https://www.youtube.com/watch?v=wMs8Ry9oFdc) - Basic arr stack setup
-- [Complete Your arr Stack](https://www.youtube.com/watch?v=oaQD-d2kg-I) - Additional services (Bazarr, Jellyseerr, FlareSolverr)
+Official documentation for included software:
+- [Jellyfin Documentation](https://jellyfin.org/docs/) - Media server setup and configuration
+- [Servarr Wiki](https://wiki.servarr.com/) - Sonarr, Radarr, Prowlarr guides
+- [Traefik Documentation](https://doc.traefik.io/traefik/) - Reverse proxy configuration
+- [Gluetun Wiki](https://github.com/qdm12/gluetun-wiki) - VPN container setup
 
-**Note**: This project has been significantly extended beyond the original tutorials with:
+**This project provides**:
 - Ugreen NAS DXP4800+-specific configuration and testing
 - Cloudflare Tunnel support for CGNAT bypass
 - Comprehensive documentation for production deployment

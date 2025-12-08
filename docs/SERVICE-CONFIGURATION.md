@@ -1,6 +1,6 @@
 # Service Configuration Guide
 
-Complete guide for configuring all services in the media automation stack after initial deployment.
+Complete guide for configuring all services in the media library management stack after initial deployment.
 
 **Last Updated**: 2025-12-07
 
@@ -173,8 +173,8 @@ Complete guide for configuring all services in the media automation stack after 
    - Click "Test" then "Save"
 3. **Add Indexers**:
    - Indexers → Add Indexer
-   - Search for your preferred indexers (e.g., 1337x, RARBG, etc.)
-   - For Cloudflare-protected sites, add the `flaresolverr` tag
+   - Search for your preferred indexers
+   - For CAPTCHA-protected sites, add the `flaresolverr` tag
 4. **Link to Sonarr**:
    - Settings → Apps → + → Sonarr
    - Sync Level: `Full Sync`
@@ -527,16 +527,15 @@ After configuration, verify the workflow:
 - [ ] Bazarr connected to Sonarr/Radarr
 - [ ] Uptime Kuma monitors are green
 
-### Test the Full Workflow:
+### Test the Integration:
 
-1. Search for a TV show in Jellyseerr
-2. Request it
-3. Verify it appears in Sonarr
-4. Sonarr searches via Prowlarr indexers
-5. Download starts in qBittorrent
-6. After download, Sonarr imports to `/media/tv`
-7. Jellyfin detects new media
-8. Bazarr fetches subtitles
+Verify all services can communicate:
+1. Jellyseerr can connect to Jellyfin, Sonarr, Radarr
+2. Sonarr/Radarr can connect to qBittorrent (via Gluetun)
+3. Prowlarr indexers sync to Sonarr/Radarr
+4. Bazarr can fetch metadata from Sonarr/Radarr
+5. Jellyfin detects media in library folders
+6. Uptime Kuma shows all services healthy
 
 ---
 

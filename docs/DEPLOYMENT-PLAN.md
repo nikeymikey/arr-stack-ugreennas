@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Goal**: Deploy a complete media automation stack on Ugreen NAS with VPN routing, reverse proxy, and SSL certificates.
+**Goal**: Deploy a complete media library management stack on Ugreen NAS with VPN routing, reverse proxy, and SSL certificates.
 
 **Domain**: yourdomain.com
 **Network**: traefik-proxy (192.168.100.0/24)
@@ -313,7 +313,7 @@ docker logs qbittorrent -f
 **Verify VPN**:
 - In qBittorrent, go to: Tools → Execution Log
 - Check connection IP (should be VPN IP)
-- Or use: https://ipleak.net/ torrent test
+- Or run: `docker exec qbittorrent wget -qO- ifconfig.me`
 
 ---
 
@@ -521,17 +521,14 @@ docker exec gluetun wget -qO- ifconfig.me
 
 ---
 
-### 7.2 Download Workflow Test
+### 7.2 Service Integration Test
 **Status**: ⏳ Pending
 
-1. In Sonarr, add a TV show
-2. Search for episode
-3. Download episode
-4. Verify:
-   - qBittorrent shows download
-   - Download completes
-   - Sonarr imports to `/volume1/Media/tv`
-   - Jellyfin shows new episode
+1. Verify Sonarr/Radarr can connect to qBittorrent (Settings → Download Clients → Test)
+2. Verify Prowlarr indexers sync to Sonarr/Radarr
+3. Verify Jellyseerr can reach Sonarr/Radarr APIs
+4. Verify Bazarr can connect to Sonarr/Radarr
+5. Verify Jellyfin detects media in library folders
 
 ---
 
@@ -597,7 +594,7 @@ dig @192.168.100.5 -p 53535 google.com
 - ✅ Jellyfin (192.168.100.4) - Media server
 - ✅ Jellyseerr (192.168.100.8) - Request manager
 - ✅ Bazarr (192.168.100.9) - Subtitle manager
-- ✅ FlareSolverr (192.168.100.10) - Cloudflare bypass
+- ✅ FlareSolverr (192.168.100.10) - CAPTCHA solver
 - ✅ Pi-hole (192.168.100.5) - DNS/Ad-blocking
 - ✅ WireGuard (192.168.100.6) - VPN server
 - ✅ Cloudflared (192.168.100.12) - Cloudflare tunnel for external access
