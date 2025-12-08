@@ -14,30 +14,17 @@ This project provides Docker Compose configurations for a self-hosted media serv
 
 All software included in this stack is **legal, open-source, and has legitimate purposes**:
 
-| Software | Legitimate Use Cases |
+| Software | Use Cases |
 |----------|---------------------|
 | **Jellyfin** | Self-hosted media streaming (like a personal Netflix for content you own) |
 | **Sonarr/Radarr** | Media library organization, file renaming, metadata fetching |
 | **Prowlarr** | Search aggregator supporting Usenet providers, public trackers, and indexers |
-| **qBittorrent** | BitTorrent client - torrenting is legal technology used for Linux distributions, Creative Commons content, game patches, and legitimate media distribution |
+| **qBittorrent** | BitTorrent client - torrenting is a legal distribution method used for Linux, Creative Commons content, academic datasets, game patches, and other legal media |
 | **Bazarr** | Subtitle management for accessibility |
 | **Jellyseerr** | Request management for household media libraries |
 | **Gluetun VPN** | Network privacy and security |
 | **Traefik** | Reverse proxy and SSL certificate management |
 | **Pi-hole** | DNS-level ad blocking and network security |
-
-## Legal Status of BitTorrent & Related Tools
-
-**BitTorrent is legal technology.** The protocol itself is widely used for legitimate purposes:
-
-- Linux distributions (Ubuntu, Fedora, etc. all offer torrent downloads)
-- Creative Commons and public domain content
-- Game updates and patches (Blizzard, many indie games)
-- Open-source software distribution
-- Academic and scientific datasets
-- Independent film and music distribution
-
-The legality depends entirely on **what content** is being transferred, not the technology itself.
 
 ## User Responsibility
 
@@ -72,12 +59,7 @@ By using this project, you acknowledge that you understand the legal implication
 
 ## For Content Creators & Rights Holders
 
-If you believe this project facilitates infringement of your copyrighted works, please note that this repository contains only **configuration files for open-source software** - it does not host, link to, or index any copyrighted content.
-
-For concerns about the underlying software projects, please contact their respective maintainers:
-- [Jellyfin](https://jellyfin.org/)
-- [Servarr Projects](https://wiki.servarr.com/) (Sonarr, Radarr, Prowlarr)
-- [qBittorrent](https://www.qbittorrent.org/)
+This repository contains only **configuration files for open-source software** - it does not host, link to, or index any copyrighted content.
 
 ---
 
