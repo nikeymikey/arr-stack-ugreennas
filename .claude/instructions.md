@@ -22,18 +22,22 @@ Forbidden in tracked files: API keys, passwords, tokens, private keys, public IP
 
 **Host**: `your-nas.local` | **User**: `your-user`
 
-**On auth failures (SSH, sudo), ASK user for correct password. Don't retry cached passwords.**
+**On any auth failure, immediately ask the user for credentials. Don't retry or guess.**
 
 ```bash
+# Add user to docker group (one-time setup, avoids needing sudo for docker):
+echo 'PASS' | sudo -S usermod -aG docker your-user
+# Requires new SSH session to take effect
+
 # SCP doesn't work on UGOS. Use stdin redirect:
 sshpass -p 'PASS' ssh user@your-nas.local "cat > /path/file" < localfile
 
-# sudo needs password piped:
-sshpass -p 'PASS' ssh user@your-nas.local "echo 'PASS' | sudo -S docker ps"
+# If sudo is needed, pipe password:
+sshpass -p 'PASS' ssh user@your-nas.local "echo 'PASS' | sudo -S <command>"
 
 # Image updates need pull + recreate (restart keeps old image):
-sudo docker compose -f docker-compose.arr-stack.yml pull <service>
-sudo docker compose -f docker-compose.arr-stack.yml up -d <service>
+docker compose -f docker-compose.arr-stack.yml pull <service>
+docker compose -f docker-compose.arr-stack.yml up -d <service>
 ```
 
 ## Service Networking
