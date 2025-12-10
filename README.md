@@ -67,7 +67,7 @@ Buy a cheap domain (~$10/year) and get:
 - **Pretty URLs** like `jellyfin.yourdomain.com`
 - **WireGuard VPN** for secure remote access to your home network
 
-**Requirements:** Domain on Cloudflare, Cloudflare account (free), Surfshark VPN
+**Requirements:** Domain with DNS managed by Cloudflare (register anywhere, point nameservers to Cloudflare), Cloudflare account (free), Surfshark VPN
 
 ### Option B: Local Network Only (No Domain)
 
@@ -96,7 +96,7 @@ VPN-routed services (Sonarr, Radarr, Prowlarr, qBittorrent) need port mappings a
 ### Prerequisites
 
 - Ugreen NAS DXP4800+ (tested) or compatible Docker-capable NAS device
-- Domain name on Cloudflare
+- Domain name (any registrar) with DNS managed by Cloudflare
 - Cloudflare account (free tier works)
 - Surfshark VPN subscription
 
