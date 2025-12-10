@@ -67,9 +67,11 @@ Buy a cheap domain (~$10/year) and get:
 - **Pretty URLs** like `jellyfin.yourdomain.com`
 - **WireGuard VPN** for secure remote access to your home network
 
-**Requirements:** Domain name, Cloudflare account (free), Surfshark VPN
+**Requirements:** Domain name, Cloudflare account (free), VPN subscription
 
-> This stack is configured for Cloudflare (DNS + Tunnel). Other DNS providers work but you'll need to modify `docker-compose.traefik.yml` (change certificate resolver) and `traefik/traefik.yml` (change ACME provider). See [Traefik ACME docs](https://doc.traefik.io/traefik/https/acme/).
+> **Cloudflare:** This stack is configured for Cloudflare (DNS + Tunnel). Other DNS providers work but you'll need to modify `docker-compose.traefik.yml` and `traefik/traefik.yml`. See [Traefik ACME docs](https://doc.traefik.io/traefik/https/acme/).
+>
+> **VPN:** Configured for Surfshark but Gluetun supports 30+ providers (NordVPN, PIA, Mullvad, etc.). See [Gluetun providers](https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers).
 
 ### Option B: Local Network Only (No Domain)
 
@@ -100,7 +102,7 @@ VPN-routed services (Sonarr, Radarr, Prowlarr, qBittorrent) need port mappings a
 - Ugreen NAS DXP4800+ (tested) or compatible Docker-capable NAS device
 - Domain name (any registrar)
 - Cloudflare account (free) - or modify configs for your DNS provider
-- Surfshark VPN subscription
+- VPN subscription (configured for Surfshark, [30+ others supported](https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers))
 
 ### Installation
 
