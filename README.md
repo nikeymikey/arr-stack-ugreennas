@@ -57,15 +57,48 @@ Claude understands the service networking, Traefik routing, deployment order, an
 
 > **Prefer Plex?** See `docker-compose.plex-arr-stack.yml` for an untested Plex/Overseerr variant.
 
+## Deployment Options
+
+### Option A: With Domain (Full Features)
+
+Buy a cheap domain (~$10/year) and get:
+- **Remote access** from anywhere via Cloudflare Tunnel
+- **SSL/HTTPS** with automatic certificates
+- **Pretty URLs** like `jellyfin.yourdomain.com`
+- **WireGuard VPN** for secure remote access to your home network
+
+**Requirements:** Domain on Cloudflare, Cloudflare account (free), Surfshark VPN
+
+### Option B: Local Network Only (No Domain)
+
+Skip the domain and access services directly via IP:port. These work out of the box:
+- `http://NAS_IP:8096` → Jellyfin
+- `http://NAS_IP:5055` → Jellyseerr
+- `http://NAS_IP:53` → Pi-hole DNS
+
+VPN-routed services (Sonarr, Radarr, Prowlarr, qBittorrent) need port mappings added to Gluetun - see compose file comments.
+
+**What works:** All media automation, VPN-protected downloads, Pi-hole DNS, local streaming
+
+**What you lose:** Remote access, HTTPS, subdomain routing, WireGuard remote VPN
+
+**To deploy local-only:**
+1. Skip `docker-compose.traefik.yml` and `docker-compose.cloudflared.yml`
+2. Add port mappings to Gluetun for *arr services (e.g., `- "8989:8989"` for Sonarr)
+3. Access via `http://NAS_IP:PORT`
+
+---
+
 ## Quick Start
+
+> The instructions below assume **Option A (with domain)**. For local-only, see above.
 
 ### Prerequisites
 
 - Ugreen NAS DXP4800+ (tested) or compatible Docker-capable NAS device
-- Domain name registered
+- Domain name on Cloudflare
 - Cloudflare account (free tier works)
 - Surfshark VPN subscription
-- Ports 80, 443, 51820/udp forwarded to NAS
 
 ### Installation
 
