@@ -40,6 +40,19 @@ x-logging: &default-logging
 #########################
 services:
   #############################################
+  # VPN Health Monitor (deunhealth)          #
+  #############################################
+  deunhealth:
+    image: qmcgaw/deunhealth
+    container_name: deunhealth
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ=Europe/London
+    restart: unless-stopped
+    logging: *default-logging
+
+  #############################################
   # VPN Gateway (Gluetun with Surfshark)    #
   #############################################
   gluetun:
@@ -70,7 +83,7 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
-      test: ["CMD", "ping", "-c", "1", "1.1.1.1"]
+      test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
       interval: 1m
       timeout: 10s
       retries: 3
@@ -83,7 +96,8 @@ services:
     container_name: qbittorrent
     network_mode: "service:gluetun"
     depends_on:
-      - gluetun
+      gluetun:
+        condition: service_healthy
     environment:
       - PUID=1000
       - PGID=1000
@@ -93,7 +107,8 @@ services:
       - qbittorrent-config:/config
       - /volume1/Media/downloads:/downloads
       - /volume1/Media:/media
-    # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)
+    labels:
+      - deunhealth.restart.on.unhealthy=true
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
@@ -110,7 +125,8 @@ services:
     container_name: sonarr
     network_mode: "service:gluetun"
     depends_on:
-      - gluetun
+      gluetun:
+        condition: service_healthy
     environment:
       - PUID=1000
       - PGID=1000
@@ -119,7 +135,8 @@ services:
       - sonarr-config:/config
       - /volume1/Media/tv:/tv
       - /volume1/Media/downloads:/downloads
-    # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)
+    labels:
+      - deunhealth.restart.on.unhealthy=true
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
@@ -136,14 +153,16 @@ services:
     container_name: prowlarr
     network_mode: "service:gluetun"
     depends_on:
-      - gluetun
+      gluetun:
+        condition: service_healthy
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
     volumes:
       - prowlarr-config:/config
-    # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)
+    labels:
+      - deunhealth.restart.on.unhealthy=true
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
@@ -160,7 +179,8 @@ services:
     container_name: radarr
     network_mode: "service:gluetun"
     depends_on:
-      - gluetun
+      gluetun:
+        condition: service_healthy
     environment:
       - PUID=1000
       - PGID=1000
@@ -169,7 +189,8 @@ services:
       - radarr-config:/config
       - /volume1/Media/movies:/movies
       - /volume1/Media/downloads:/downloads
-    # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)
+    labels:
+      - deunhealth.restart.on.unhealthy=true
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
