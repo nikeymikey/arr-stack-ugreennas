@@ -67,7 +67,9 @@ Buy a cheap domain (~$10/year) and get:
 - **Pretty URLs** like `jellyfin.yourdomain.com`
 - **WireGuard VPN** for secure remote access to your home network
 
-**Requirements:** Domain with DNS managed by Cloudflare (register anywhere, point nameservers to Cloudflare), Cloudflare account (free), Surfshark VPN
+**Requirements:** Domain name, Cloudflare account (free), Surfshark VPN
+
+> This stack is configured for Cloudflare (DNS + Tunnel). Other DNS providers work but you'll need to modify `docker-compose.traefik.yml` (change certificate resolver) and `traefik/traefik.yml` (change ACME provider). See [Traefik ACME docs](https://doc.traefik.io/traefik/https/acme/).
 
 ### Option B: Local Network Only (No Domain)
 
@@ -96,8 +98,8 @@ VPN-routed services (Sonarr, Radarr, Prowlarr, qBittorrent) need port mappings a
 ### Prerequisites
 
 - Ugreen NAS DXP4800+ (tested) or compatible Docker-capable NAS device
-- Domain name (any registrar) with DNS managed by Cloudflare
-- Cloudflare account (free tier works)
+- Domain name (any registrar)
+- Cloudflare account (free) - or modify configs for your DNS provider
 - Surfshark VPN subscription
 
 ### Installation
