@@ -348,6 +348,8 @@ services:
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
     container_name: bazarr
+    ports:
+      - "6767:6767"  # Local network access
     environment:
       - PUID=1000
       - PGID=1000
@@ -398,6 +400,8 @@ services:
     image: louislam/uptime-kuma:2
     container_name: uptime-kuma
     restart: unless-stopped
+    ports:
+      - "3001:3001"  # Local network access
     environment:
       - TZ=Europe/London
     networks:

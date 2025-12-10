@@ -29,6 +29,7 @@ Claude understands the service networking, Traefik routing, deployment order, an
 ## Features
 
 - **VPN-protected networking** via Gluetun + Surfshark for privacy
+- **Auto-recovery** - VPN-dependent services automatically restart when VPN reconnects (via deunhealth)
 - **Automated SSL/TLS** certificates via Traefik + Cloudflare
 - **Media library management** with Sonarr, Radarr, Prowlarr, Bazarr
 - **Media streaming** with Jellyfin (or Plex - see below)
@@ -39,21 +40,22 @@ Claude understands the service networking, Traefik routing, deployment order, an
 
 ## Services Included
 
-| Service | Description | Port/URL |
-|---------|-------------|----------|
-| **Traefik** | Reverse proxy with automatic SSL | traefik.yourdomain.com |
-| **Gluetun** | VPN gateway for network privacy | Internal |
-| **qBittorrent** | BitTorrent client | qbit.yourdomain.com |
-| **Sonarr** | TV show library management | sonarr.yourdomain.com |
-| **Radarr** | Movie library management | radarr.yourdomain.com |
-| **Prowlarr** | Search aggregator | prowlarr.yourdomain.com |
-| **Bazarr** | Subtitle management | bazarr.yourdomain.com |
-| **Jellyfin** | Media streaming server | jellyfin.yourdomain.com |
-| **Jellyseerr** | Media request system | jellyseerr.yourdomain.com |
-| **Pi-hole** | DNS + Ad-blocking | pihole.yourdomain.com |
-| **WireGuard** | VPN server for remote access | wg.yourdomain.com |
-| **Uptime Kuma** | Service monitoring | uptime.yourdomain.com |
-| **FlareSolverr** | CAPTCHA solver | Internal |
+| Service | Description | Local Port | Domain URL |
+|---------|-------------|------------|------------|
+| **Traefik** | Reverse proxy with automatic SSL | 8080 | traefik.yourdomain.com |
+| **Gluetun** | VPN gateway for network privacy | - | Internal |
+| **qBittorrent** | BitTorrent client | 8085 | qbit.yourdomain.com |
+| **Sonarr** | TV show library management | 8989 | sonarr.yourdomain.com |
+| **Radarr** | Movie library management | 7878 | radarr.yourdomain.com |
+| **Prowlarr** | Search aggregator | 9696 | prowlarr.yourdomain.com |
+| **Bazarr** | Subtitle management | 6767 | bazarr.yourdomain.com |
+| **Jellyfin** | Media streaming server | 8096 | jellyfin.yourdomain.com |
+| **Jellyseerr** | Media request system | 5055 | jellyseerr.yourdomain.com |
+| **Pi-hole** | DNS + Ad-blocking | 53, 80 | pihole.yourdomain.com |
+| **WireGuard** | VPN server for remote access | 51820/udp | wg.yourdomain.com |
+| **Uptime Kuma** | Service monitoring | 3001 | uptime.yourdomain.com |
+| **FlareSolverr** | CAPTCHA solver | 8191 | Internal |
+| **deunhealth** | Auto-restart on VPN recovery | - | Internal |
 
 > **Prefer Plex?** See `docker-compose.plex-arr-stack.yml` for an untested Plex/Overseerr variant.
 
@@ -82,6 +84,8 @@ Skip the domain and access services directly via IP:port. All services work out 
 - `http://NAS_IP:7878` → Radarr
 - `http://NAS_IP:9696` → Prowlarr
 - `http://NAS_IP:8085` → qBittorrent
+- `http://NAS_IP:6767` → Bazarr
+- `http://NAS_IP:3001` → Uptime Kuma
 - `http://NAS_IP:53` → Pi-hole DNS
 
 **What works:** All media automation, VPN-protected downloads, Pi-hole DNS, local streaming
@@ -154,7 +158,8 @@ arr-stack-ugreennas/          # Git repo (source of truth)
 │   ├── traefik.yml                 # Static config
 │   └── dynamic/
 │       ├── tls.yml                 # TLS settings
-│       └── vpn-services.yml        # Service routing
+│       ├── vpn-services.yml        # Service routing (Jellyfin)
+│       └── vpn-services-plex.yml   # Service routing (Plex variant)
 ├── .env.example                    # Environment template
 ├── .env                            # Your configuration (gitignored)
 ├── docs/                           # Documentation (git repo only)
@@ -272,16 +277,17 @@ docker network create \
   --gateway=192.168.100.1 \
   traefik-proxy
 
-# 2. Deploy Traefik
+# 2. Deploy Traefik (creates SSL certs)
 docker compose -f docker-compose.traefik.yml up -d
 
-# 3. Deploy services (staged)
-docker compose -f docker-compose.arr-stack.yml up -d gluetun
-docker compose -f docker-compose.arr-stack.yml up -d qbittorrent
-docker compose -f docker-compose.arr-stack.yml up -d sonarr radarr prowlarr
-docker compose -f docker-compose.arr-stack.yml up -d jellyfin jellyseerr bazarr
-docker compose -f docker-compose.arr-stack.yml up -d pihole wg-easy uptime-kuma
+# 3. Deploy Cloudflare Tunnel (for remote access)
+docker compose -f docker-compose.cloudflared.yml up -d
+
+# 4. Deploy media stack (health checks handle startup order)
+docker compose -f docker-compose.arr-stack.yml up -d
 ```
+
+> **Note**: VPN-dependent services (Sonarr, Radarr, etc.) automatically wait for Gluetun to be healthy before starting.
 
 ## Updating
 
@@ -313,10 +319,10 @@ docker run --rm \
 Having issues? Check the **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)**.
 
 Common issues:
-- VPN not connecting → Check Surfshark credentials
-- SSL certificates not working → Verify Cloudflare API token
-- Services not accessible → Check port forwarding (80, 443)
-- VPN services unreachable → Verify Gluetun connection
+- VPN not connecting → Check VPN credentials in `.env`
+- SSL certificates not working → Verify Cloudflare API token permissions
+- Services not accessible → Check Cloudflare Tunnel status, verify Traefik is running
+- VPN services unreachable → Check `docker logs gluetun` for connection status
 
 ## Security Considerations
 
