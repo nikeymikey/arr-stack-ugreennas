@@ -1,0 +1,128 @@
+# Plex variant - copy this to vpn-services.yml if using docker-compose.plex-arr-stack.yml
+# Changes from Jellyfin version: jellyfin→plex (port 32400), jellyseerr→overseerr
+http:
+  routers:
+    sonarr:
+      rule: "Host(`sonarr.moosenas.cc`)"
+      entryPoints:
+        - web
+      service: sonarr
+
+    radarr:
+      rule: "Host(`radarr.moosenas.cc`)"
+      entryPoints:
+        - web
+      service: radarr
+
+    qbittorrent:
+      rule: "Host(`qbit.moosenas.cc`)"
+      entryPoints:
+        - web
+      service: qbittorrent
+
+    prowlarr:
+      rule: "Host(`prowlarr.moosenas.cc`)"
+      entryPoints:
+        - web
+      service: prowlarr
+
+    plex:
+      rule: "Host(`plex.moosenas.cc`)"
+      entryPoints:
+        - web
+      service: plex
+
+    overseerr:
+      rule: "Host(`overseerr.moosenas.cc`)"
+      entryPoints:
+        - web
+      service: overseerr
+
+    bazarr:
+      rule: "Host(`bazarr.moosenas.cc`)"
+      entryPoints:
+        - web
+      service: bazarr
+
+    pihole:
+      rule: "Host(`pihole.moosenas.cc`)"
+      entryPoints:
+        - web
+      service: pihole
+
+    wg:
+      rule: "Host(`wg.moosenas.cc`)"
+      entryPoints:
+        - web
+      service: wg
+
+    uptime:
+      rule: "Host(`uptime.moosenas.cc`)"
+      entryPoints:
+        - web
+      service: uptime
+
+    traefik-dashboard:
+      rule: "Host(`traefik.moosenas.cc`)"
+      entryPoints:
+        - web
+      service: api@internal
+      middlewares:
+        - dashboard-auth
+
+  middlewares:
+    dashboard-auth:
+      basicAuth:
+        users:
+          - "admin:$2y$05$MAxBsKrzpgBxt8PMBZ.fcujzfVOqJa8MzlbUyfKMTHIewJ/u7v3u."
+
+  services:
+    sonarr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.100.3:8989"
+
+    radarr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.100.3:7878"
+
+    qbittorrent:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.100.3:8085"
+
+    prowlarr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.100.3:9696"
+
+    plex:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.100.4:32400"
+
+    overseerr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.100.8:5055"
+
+    bazarr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.100.9:6767"
+
+    pihole:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.100.5:80"
+
+    wg:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.100.6:51821"
+
+    uptime:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.100.13:3001"

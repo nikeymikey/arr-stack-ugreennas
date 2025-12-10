@@ -31,8 +31,8 @@ Claude understands the service networking, Traefik routing, deployment order, an
 - **VPN-protected networking** via Gluetun + Surfshark for privacy
 - **Automated SSL/TLS** certificates via Traefik + Cloudflare
 - **Media library management** with Sonarr, Radarr, Prowlarr, Bazarr
-- **Media streaming** with Jellyfin
-- **Request management** with Jellyseerr
+- **Media streaming** with Jellyfin (or Plex - see below)
+- **Request management** with Jellyseerr (or Overseerr for Plex)
 - **Remote access** via WireGuard VPN
 - **Ad-blocking DNS** with Pi-hole
 - **Service monitoring** with Uptime Kuma
@@ -54,6 +54,8 @@ Claude understands the service networking, Traefik routing, deployment order, an
 | **WireGuard** | VPN server for remote access | wg.yourdomain.com |
 | **Uptime Kuma** | Service monitoring | uptime.yourdomain.com |
 | **FlareSolverr** | CAPTCHA solver | Internal |
+
+> **Prefer Plex?** See `docker-compose.plex-arr-stack.yml` for an untested Plex/Overseerr variant.
 
 ## Quick Start
 
@@ -106,7 +108,8 @@ Claude understands the service networking, Traefik routing, deployment order, an
 ```
 arr-stack-ugreennas/          # Git repo (source of truth)
 ├── docker-compose.traefik.yml      # Traefik reverse proxy
-├── docker-compose.arr-stack.yml    # Main media stack
+├── docker-compose.arr-stack.yml    # Main media stack (Jellyfin)
+├── docker-compose.plex-arr-stack.yml  # Plex variant (untested)
 ├── docker-compose.cloudflared.yml  # Cloudflare tunnel
 ├── traefik/                        # Traefik configuration
 │   ├── traefik.yml                 # Static config
