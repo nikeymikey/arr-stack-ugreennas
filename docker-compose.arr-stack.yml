@@ -76,6 +76,13 @@ services:
       - TZ=Europe/London
       - DNS_ADDRESS=192.168.100.5
       - FIREWALL_OUTBOUND_SUBNETS=192.168.0.0/24,192.168.100.0/24,10.8.1.0/24
+    ports:
+      # Ports for services using network_mode: "service:gluetun"
+      # Enables direct local access without Traefik (http://NAS_IP:PORT)
+      - "8989:8989"   # Sonarr
+      - "7878:7878"   # Radarr
+      - "9696:9696"   # Prowlarr
+      - "8085:8085"   # qBittorrent
     networks:
       traefik-proxy:
         ipv4_address: 192.168.100.3

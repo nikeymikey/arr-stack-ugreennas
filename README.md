@@ -75,12 +75,14 @@ Buy a cheap domain (~$10/year) and get:
 
 ### Option B: Local Network Only (No Domain)
 
-Skip the domain and access services directly via IP:port. These work out of the box:
+Skip the domain and access services directly via IP:port. All services work out of the box:
 - `http://NAS_IP:8096` → Jellyfin
 - `http://NAS_IP:5055` → Jellyseerr
+- `http://NAS_IP:8989` → Sonarr
+- `http://NAS_IP:7878` → Radarr
+- `http://NAS_IP:9696` → Prowlarr
+- `http://NAS_IP:8085` → qBittorrent
 - `http://NAS_IP:53` → Pi-hole DNS
-
-VPN-routed services (Sonarr, Radarr, Prowlarr, qBittorrent) need port mappings added to Gluetun - see compose file comments.
 
 **What works:** All media automation, VPN-protected downloads, Pi-hole DNS, local streaming
 
@@ -88,7 +90,7 @@ VPN-routed services (Sonarr, Radarr, Prowlarr, qBittorrent) need port mappings a
 
 **To deploy local-only:**
 1. Skip `docker-compose.traefik.yml` and `docker-compose.cloudflared.yml`
-2. Add port mappings to Gluetun for *arr services (e.g., `- "8989:8989"` for Sonarr)
+2. Deploy: `docker compose -f docker-compose.arr-stack.yml up -d`
 3. Access via `http://NAS_IP:PORT`
 
 ---
