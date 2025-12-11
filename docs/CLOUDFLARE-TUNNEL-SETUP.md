@@ -29,7 +29,7 @@ Cloudflare Tunnel creates a secure outbound connection from your NAS to Cloudfla
 
 - Cloudflare account (free tier works)
 - Domain managed by Cloudflare DNS (yourdomain.com)
-- SSH access to Ugreen NAS
+- SSH access to Ugreen NAS (enable in UGOS Control Panel → Terminal → SSH)
 - Traefik already deployed
 
 ---
