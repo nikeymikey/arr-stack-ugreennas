@@ -200,7 +200,9 @@ Because of this separation:
 ### Software Requirements
 - Docker Engine 20.10+
 - Docker Compose v2.0+
-- SSH access to NAS (enable in UGOS Control Panel → Settings → SSH, recommend 2-hour expiry)
+- SSH access to NAS (enable in UGOS Control Panel → Terminal → SSH, set "Shut down automatically" to 2h)
+
+  ![UGOS SSH Settings](images/UGOS-SSH.png)
 - Basic Linux command-line knowledge
 
 ### External Services
