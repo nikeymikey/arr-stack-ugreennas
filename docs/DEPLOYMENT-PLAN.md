@@ -55,6 +55,8 @@ If you deploy in the wrong order, arr-stack will fail with "network not found" e
 
 ### Quick Steps
 
+> **First**: Enable SSH in UGOS Control Panel → Terminal → SSH, set "Shut down automatically" to 2h. See [screenshot](images/UGOS-SSH.png).
+
 ```bash
 # SSH to NAS
 ssh your-username@nas-ip
