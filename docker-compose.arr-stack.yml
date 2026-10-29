@@ -4,12 +4,7 @@ version: "3.8"
 # Centralized Volumes   #
 #########################
 volumes:
-  qbittorrent-config:
-  sonarr-config:
   prowlarr-config:
-  radarr-config:
-  jellyfin-config:
-  jellyfin-cache:
   pihole-etc-pihole:
   pihole-etc-dnsmasq:
   wireguard-easy-config:
@@ -53,7 +48,7 @@ services:
     logging: *default-logging
 
   #############################################
-  # VPN Gateway (Gluetun with Surfshark)    #
+  # VPN Gateway (Gluetun with NordVPN)      #
   #############################################
   gluetun:
     image: qmcgaw/gluetun
@@ -65,24 +60,23 @@ services:
     env_file:
       - .env
     volumes:
-      - /volume1/docker/arr-stack/gluetun-config:/gluetun
+      - /volume2/docker/arr-stack/gluetun-config:/gluetun
     environment:
-      # Surfshark VPN Configuration (WireGuard)
-      - VPN_SERVICE_PROVIDER=surfshark
-      - VPN_TYPE=wireguard
-      - WIREGUARD_PRIVATE_KEY=${SURFSHARK_PRIVATE_KEY}
-      - WIREGUARD_ADDRESSES=${SURFSHARK_WG_ADDRESS}
+      # NordVPN Configuration (OpenVPN, service credentials)
+      - VPN_SERVICE_PROVIDER=nordvpn
+      - VPN_TYPE=openvpn
+      - OPENVPN_USER=${NORDVPN_USER}
+      - OPENVPN_PASSWORD=${NORDVPN_PASSWORD}
       - SERVER_COUNTRIES=${VPN_COUNTRIES:-United Kingdom}
       - TZ=Europe/London
       - DNS_ADDRESS=192.168.100.5
-      - FIREWALL_OUTBOUND_SUBNETS=192.168.0.0/24,192.168.100.0/24,10.8.1.0/24
+      - FIREWALL_OUTBOUND_SUBNETS=192.168.50.0/24,192.168.100.0/24,10.8.1.0/24
     ports:
       # Ports for services using network_mode: "service:gluetun"
       # Enables direct local access without Traefik (http://NAS_IP:PORT)
       - "8989:8989"   # Sonarr
       - "7878:7878"   # Radarr
       - "9696:9696"   # Prowlarr
-      - "8085:8085"   # qBittorrent
     networks:
       traefik-proxy:
         ipv4_address: 192.168.100.3
@@ -92,35 +86,6 @@ services:
     healthcheck:
       test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
       interval: 1m
-      timeout: 10s
-      retries: 3
-
-  #############################################
-  # Download Client (qBittorrent via VPN)    #
-  #############################################
-  qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent
-    container_name: qbittorrent
-    network_mode: "service:gluetun"
-    depends_on:
-      gluetun:
-        condition: service_healthy
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/London
-      - WEBUI_PORT=8085
-    volumes:
-      - qbittorrent-config:/config
-      - /volume1/Media/downloads:/downloads
-      - /volume1/Media:/media
-    labels:
-      - deunhealth.restart.on.unhealthy=true
-    restart: unless-stopped
-    logging: *default-logging
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8085/"]
-      interval: 1m30s
       timeout: 10s
       retries: 3
 
@@ -136,12 +101,13 @@ services:
         condition: service_healthy
     environment:
       - PUID=1000
-      - PGID=1000
+      - PGID=10
       - TZ=Europe/London
     volumes:
-      - sonarr-config:/config
-      - /volume1/Media/tv:/tv
-      - /volume1/Media/downloads:/downloads
+      - /volume2/docker/sonarr/config:/config
+      - /volume2/docker/syncthing/data1/sync:/data1:rw
+      - /volume1/media/tv:/series
+      - /volume3/media2/tv2:/series2
     labels:
       - deunhealth.restart.on.unhealthy=true
     restart: unless-stopped
@@ -190,12 +156,13 @@ services:
         condition: service_healthy
     environment:
       - PUID=1000
-      - PGID=1000
+      - PGID=10
       - TZ=Europe/London
     volumes:
-      - radarr-config:/config
-      - /volume1/Media/movies:/movies
-      - /volume1/Media/downloads:/downloads
+      - /volume2/docker/radarr/config:/config
+      - /volume2/docker/syncthing/data1/sync:/data1:rw
+      - /volume1/media/movies:/media
+      - /volume3/media2/movies2:/media2
     labels:
       - deunhealth.restart.on.unhealthy=true
     restart: unless-stopped
@@ -207,44 +174,14 @@ services:
       retries: 3
 
   #############################################
-  # Media Server (Jellyfin)                  #
-  #############################################
-  jellyfin:
-    image: jellyfin/jellyfin
-    container_name: jellyfin
-    ports:
-      - "192.168.0.136:8096:8096"  # Local network access
-    environment:
-      - TZ=Europe/London
-    volumes:
-      - jellyfin-config:/config
-      - jellyfin-cache:/cache
-      - /volume1/Media/movies:/media/movies:ro
-      - /volume1/Media/tv:/media/tv:ro
-    networks:
-      traefik-proxy:
-        ipv4_address: 192.168.100.4
-    labels:
-      # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik-proxy"
-    restart: unless-stopped
-    logging: *default-logging
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8096/health"]
-      interval: 3m
-      timeout: 10s
-      retries: 2
-
-  #############################################
   # DNS & Ad-blocking (Pi-hole)              #
   #############################################
   pihole:
     image: pihole/pihole:latest
     container_name: pihole
     ports:
-      - "192.168.0.136:53:53/tcp"  # Bind to NAS IP to avoid conflict with localhost dnsmasq
-      - "192.168.0.136:53:53/udp"
+      - "192.168.50.139:53:53/tcp"  # Bind to NAS IP to avoid conflict with localhost dnsmasq
+      - "192.168.50.139:53:53/udp"
     networks:
       traefik-proxy:
         ipv4_address: 192.168.100.5
@@ -277,7 +214,7 @@ services:
   # WireGuard VPN Server (wg-easy)           #
   #############################################
   wg-easy:
-    image: ghcr.io/wg-easy/wg-easy
+    image: ghcr.io/wg-easy/wg-easy:14
     container_name: wg-easy
     environment:
       - LANG=en
@@ -320,7 +257,7 @@ services:
     image: fallenbagel/jellyseerr:latest
     container_name: jellyseerr
     ports:
-      - "192.168.0.136:5055:5055"  # Local network access
+      - "192.168.50.139:5055:5055"  # Local network access
     environment:
       - LOG_LEVEL=info
       - TZ=Europe/London
@@ -333,7 +270,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-proxy"
     volumes:
-      - /volume1/docker/arr-stack/jellyseerr/config:/app/config
+      - /volume2/docker/arr-stack/jellyseerr/config:/app/config
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
@@ -352,15 +289,17 @@ services:
       - "6767:6767"  # Local network access
     environment:
       - PUID=1000
-      - PGID=1000
+      - PGID=10
       - TZ=Europe/London
     networks:
       traefik-proxy:
         ipv4_address: 192.168.100.9
     volumes:
-      - /volume1/docker/arr-stack/bazarr/config:/config
-      - /volume1/Media/movies:/movies
-      - /volume1/Media/tv:/tv
+      - /volume2/docker/arr-stack/bazarr/config:/config
+      - /volume1/media/tv:/series
+      - /volume3/media2/tv2:/series2
+      - /volume1/media/movies:/media
+      - /volume3/media2/movies2:/media2
     labels:
       # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)
       - "traefik.enable=true"
@@ -408,7 +347,7 @@ services:
       traefik-proxy:
         ipv4_address: 192.168.100.13
     volumes:
-      - /volume1/docker/arr-stack/uptime-kuma:/app/data
+      - /volume2/docker/arr-stack/uptime-kuma:/app/data
       - /var/run/docker.sock:/var/run/docker.sock:ro  # For Docker container monitoring
     labels:
       # Routing handled by traefik/dynamic/vpn-services.yml (not Docker labels)

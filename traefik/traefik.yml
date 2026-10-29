@@ -14,7 +14,7 @@ api:
 entryPoints:
   web:
     address: ":80"
-    # Redirect disabled - Cloudflare Tunnel handles SSL
+    # Redirect disabled: Cloudflare terminates TLS (proxied DNS); Traefik receives plain HTTP only on LAN routes
     # http:
     #   redirections:
     #     entryPoint:
@@ -28,15 +28,15 @@ entryPoints:
       tls:
         certResolver: cloudflare
         domains:
-          - main: yourdomain.com
+          - main: nikeymikey.com
             sans:
-              - "*.yourdomain.com"
+              - "*.nikeymikey.com"
 
 # Certificate Resolvers
 certificatesResolvers:
   cloudflare:
     acme:
-      email: admin@yourdomain.com
+      email: acme@nikeymikey.com
       storage: /acme.json
       caServer: https://acme-v02.api.letsencrypt.org/directory
       # Uncomment for testing to avoid rate limits

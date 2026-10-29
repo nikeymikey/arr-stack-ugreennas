@@ -1,78 +1,93 @@
 http:
   routers:
+    # --- Public: Cloudflare proxied DNS -> port-forward -> Traefik :8443 ---
+    tv1:
+      rule: "Host(`tv1.nikeymikey.com`)"
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: cloudflare
+      service: jellyfin
+
+    arcade:
+      rule: "Host(`arcade.nikeymikey.com`)"
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: cloudflare
+      service: arcade
+
+    # --- LAN only: web entrypoint (host :8080, never port-forwarded) ---
     sonarr:
-      rule: "Host(`sonarr.moosenas.cc`)"
+      rule: "Host(`sonarr.nikeymikey.com`)"
       entryPoints:
         - web
+      middlewares:
+        - lan-only
       service: sonarr
 
     radarr:
-      rule: "Host(`radarr.moosenas.cc`)"
+      rule: "Host(`radarr.nikeymikey.com`)"
       entryPoints:
         - web
+      middlewares:
+        - lan-only
       service: radarr
 
-    qbittorrent:
-      rule: "Host(`qbit.moosenas.cc`)"
-      entryPoints:
-        - web
-      service: qbittorrent
-
     prowlarr:
-      rule: "Host(`prowlarr.moosenas.cc`)"
+      rule: "Host(`prowlarr.nikeymikey.com`)"
       entryPoints:
         - web
+      middlewares:
+        - lan-only
       service: prowlarr
 
-    jellyfin:
-      rule: "Host(`jellyfin.moosenas.cc`)"
-      entryPoints:
-        - web
-      service: jellyfin
-
     jellyseerr:
-      rule: "Host(`jellyseerr.moosenas.cc`)"
+      rule: "Host(`jellyseerr.nikeymikey.com`)"
       entryPoints:
         - web
+      middlewares:
+        - lan-only
       service: jellyseerr
 
     bazarr:
-      rule: "Host(`bazarr.moosenas.cc`)"
+      rule: "Host(`bazarr.nikeymikey.com`)"
       entryPoints:
         - web
+      middlewares:
+        - lan-only
       service: bazarr
 
     pihole:
-      rule: "Host(`pihole.moosenas.cc`)"
+      rule: "Host(`pihole.nikeymikey.com`)"
       entryPoints:
         - web
+      middlewares:
+        - lan-only
       service: pihole
 
     wg:
-      rule: "Host(`wg.moosenas.cc`)"
+      rule: "Host(`wg.nikeymikey.com`)"
       entryPoints:
         - web
+      middlewares:
+        - lan-only
       service: wg
 
     uptime:
-      rule: "Host(`uptime.moosenas.cc`)"
+      rule: "Host(`uptime.nikeymikey.com`)"
       entryPoints:
         - web
+      middlewares:
+        - lan-only
       service: uptime
 
-    traefik-dashboard:
-      rule: "Host(`traefik.moosenas.cc`)"
-      entryPoints:
-        - web
-      service: api@internal
-      middlewares:
-        - dashboard-auth
-
   middlewares:
-    dashboard-auth:
-      basicAuth:
-        users:
-          - "admin:$2y$05$MAxBsKrzpgBxt8PMBZ.fcujzfVOqJa8MzlbUyfKMTHIewJ/u7v3u."
+    # Requests via Cloudflare arrive from Cloudflare IPs and get a 403
+    lan-only:
+      ipAllowList:
+        sourceRange:
+          - "192.168.50.0/24"
 
   services:
     sonarr:
@@ -85,11 +100,6 @@ http:
         servers:
           - url: "http://192.168.100.3:7878"
 
-    qbittorrent:
-      loadBalancer:
-        servers:
-          - url: "http://192.168.100.3:8085"
-
     prowlarr:
       loadBalancer:
         servers:
@@ -98,7 +108,12 @@ http:
     jellyfin:
       loadBalancer:
         servers:
-          - url: "http://192.168.100.4:8096"
+          - url: "http://192.168.50.139:8096"
+
+    arcade:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.50.139:4235"
 
     jellyseerr:
       loadBalancer:
