@@ -1,155 +1,82 @@
 # Project Instructions for Claude Code
 
-This file provides context for Claude Code to assist with this project.
+## Ground rules
+- Plan first. Don't edit or run anything until I approve the plan.
+- Only edit docker-compose.arr-stack.yml, docker-compose.traefik.yml,
+  docker-compose.cloudflared.yml, traefik/ and this file. Never edit docs/, README.md
+  or the plex compose. Show every edit as a diff first.
+- Never read, print, edit or commit `.env`. I manage it by hand on the NAS.
+- Never put passwords or tokens in commands. If sudo or auth is needed, stop and ask me.
+- Show me each NAS command before running it. Never run `docker compose down`,
+  `docker volume rm`, `docker system prune` or `rm -rf` without explicit approval.
+- Never run an old container and its replacement on the same config folder at once.
 
-## Security
+## NAS access
+- Use `ssh nas` (key auth; my user is in the docker group, so no sudo for docker).
+- scp doesn't work on UGOS. Deploy by committing to my fork, then:
+  `ssh nas "cd /volume2/docker/arr-stack && git pull"`
+- NAS IP: 192.168.50.139 (LAN 192.168.50.0/24). Timezone: Europe/London.
+- I manage the existing containers with Dockhand. Dockhand may restart stopped
+  containers, so use `docker update --restart=no <name>` when retiring one.
 
-**NEVER commit secrets.** Use `${VAR_NAME}` references in compose files, real values in `.env` (gitignored).
+## Storage layout (lowercase, never create /volume1/Media)
+- Media: /volume1/media and /volume3/media2.
+- Downloads landing folder: /volume1/media/downloads/{tv,movies}. It must stay on
+  the same filesystem as the library it imports into, so hardlinks work.
+- App config: /volume2/docker/<app>/ (e.g. /volume2/docker/jellyfinht/config).
+- Docker root: /volume2/@docker. Deploy dir (clone of my fork): /volume2/docker/arr-stack.
 
-Forbidden in tracked files: API keys, passwords, tokens, private keys, public IPs, email addresses.
+## Approach: adopt existing containers, don't migrate data
+- My current containers are Jellyfin-HT, sonarr, radarr (names are case-sensitive).
+  The repo's services should reuse their existing config folders as bind mounts
+  (not named volumes) and keep their existing container-side media paths, so no
+  library paths change and nothing is copied.
+- Jellyfin-HT runs as user 1000:10, group_add 105 and passes /dev/dri for Intel
+  hardware transcoding. Carry these over, and pin the exact image tag it runs now.
+- PUID/PGID for Sonarr/Radarr must match the owner of their existing config folders,
+  not the repo's hardcoded 1000:1000.
+- Cutover is one app at a time: stop it, `docker update --restart=no <name>`,
+  `docker rename <name> <name>-old`, then start the repo's service. Keep the -old
+  containers for rollback.
+- The old unused `gluetun` container must be removed before the repo's one starts.
 
-## File Locations
+## My differences from upstream
+- VPN: NordVPN via Gluetun, OpenVPN, service credentials
+  (NORDVPN_USER / NORDVPN_PASSWORD in .env). Not Surfshark.
+- No local torrent client. Remove qBittorrent (service, port 8085, volume).
+  Downloads happen on an external seedbox, synced by an rsync cron on the NAS host
+  (outside Gluetun) into /volume1/media/downloads/{tv,movies}. Sonarr/Radarr use
+  Remote Path Mappings from the seedbox paths to those folders as the containers
+  see them. "Remove Completed" stays on so the seedbox cleans up after seeding.
+- Replace 192.168.0.136 with 192.168.50.139 and 192.168.0.0/24 with 192.168.50.0/24
+  (gluetun FIREWALL_OUTBOUND_SUBNETS). Keep the 192.168.100.0/24 Docker network.
 
-| Location | Purpose | Sync to NAS? |
-|----------|---------|--------------|
-| Git repo | Source of truth | N/A |
-| NAS `/volume1/docker/arr-stack/` | Deployment | Only operational files |
+## Service networking
+- Sonarr, Radarr, Prowlarr use `network_mode: service:gluetun` (shared IP 192.168.100.3).
+- VPN to VPN: `localhost`. Non-VPN to VPN (Jellyseerr/Bazarr to Sonarr): `gluetun`.
+  Anything to a non-VPN container: container name.
+- FlareSolverr is 192.168.100.10. Prowlarr resolves it by name only if Pi-hole has
+  `192.168.100.10 flaresolverr` in its hosts; otherwise use the IP.
+- Static IPs on traefik-proxy: traefik .2, gluetun .3, jellyfin .4, pihole .5,
+  wg-easy .6, jellyseerr .8, bazarr .9, flaresolverr .10, cloudflared .12, uptime-kuma .13.
+- Pi-hole v6 uses pihole.toml, not custom.list. Use `.lan`, never `.local`.
+- Because Sonarr/Radarr move behind Gluetun, anything that pointed at another
+  container by name must use an IP or a Pi-hole hosts entry.
 
-**Sync to NAS**: `docker-compose.*.yml`, `traefik/`, `.env`, `scripts/`
-**Never sync**: `docs/`, `README.md`, `.env.example`, `.gitignore`
+## Traefik / Cloudflare
+- Routes live in traefik/dynamic/vpn-services.yml, not Docker labels.
+- Traefik host ports: 8080 (HTTP), 8443, dashboard 9090. Do NOT move UGOS nginx.
+- Cloudflare Tunnel routes point to 192.168.50.139:8080. Publish only Jellyfin
+  and Jellyseerr.
 
-## NAS Access
+## Deployment order
+Network `traefik-proxy` -> traefik -> cloudflared -> arr-stack (gluetun first; verify
+the VPN IP with `docker exec gluetun wget -qO- https://ipinfo.io/ip`). Deploy from
+/volume2/docker/arr-stack over SSH, not by pasting compose files into Dockhand
+(the repo uses relative paths like ./traefik/).
 
-**Host**: `your-nas.local` | **User**: `your-user`
-
-**On any auth failure, immediately ask the user for credentials. Don't retry or guess.**
-
-```bash
-# Add user to docker group (one-time setup, avoids needing sudo for docker):
-echo 'PASS' | sudo -S usermod -aG docker your-user
-# Requires new SSH session to take effect
-
-# SCP doesn't work on UGOS. Use stdin redirect:
-sshpass -p 'PASS' ssh user@your-nas.local "cat > /path/file" < localfile
-
-# If sudo is needed, pipe password:
-sshpass -p 'PASS' ssh user@your-nas.local "echo 'PASS' | sudo -S <command>"
-
-# Image updates need pull + recreate (restart keeps old image):
-docker compose -f docker-compose.arr-stack.yml pull <service>
-docker compose -f docker-compose.arr-stack.yml up -d <service>
-```
-
-## Service Networking
-
-VPN services (Sonarr, Radarr, Prowlarr, qBittorrent) use `network_mode: service:gluetun`.
-
-| Route | Use |
-|-------|-----|
-| VPN → VPN (Sonarr/Radarr → qBittorrent) | `localhost` |
-| Non-VPN → VPN (Jellyseerr → Sonarr) | `gluetun` |
-| Any → Non-VPN (Any → Jellyfin) | container name |
-
-**Download client config**: Sonarr/Radarr → qBittorrent: Host=`localhost`, Port=`8085` (they share Gluetun's network).
-
-## Traefik Routing
-
-Routes defined in `traefik/dynamic/vpn-services.yml`, NOT Docker labels.
-
-Docker labels are minimal (`traefik.enable=true`, `traefik.docker.network=traefik-proxy`). To add routes, edit `vpn-services.yml`.
-
-## Cloudflare Tunnel
-
-Dashboard path: **Zero Trust → Networks → Connectors → Cloudflare Tunnels → [tunnel] → Configure → Published application routes**
-
-All routes point to `NAS_IP:8080` (Traefik). Traefik routes by Host header.
-
-## Pi-hole DNS (v6+)
-
-Uses `pihole.toml`, NOT `custom.list`.
-
-```bash
-# Edit hosts array (~line 129) in container:
-docker exec pihole sed -n '129p' /etc/pihole/pihole.toml
-# Then: docker restart pihole
-```
-
-**TLDs**: `.local` fails in Docker (mDNS reserved). Use `.lan` for local DNS.
-
-**Docker services for VPN-routed containers**: Add to Pi-hole so Prowlarr/Sonarr/Radarr can resolve them:
-```
-192.168.100.10 flaresolverr
-```
-
-## Architecture
-
-- **3 compose files**: traefik (infra), arr-stack (apps), cloudflared (tunnel)
-- **Network**: traefik-proxy (192.168.100.0/24), static IPs for all services
-- **External access**: Cloudflare Tunnel (bypasses CGNAT)
-
-## Adding Services
-
-1. Add to `docker-compose.arr-stack.yml` with static IP
-2. Add route to `traefik/dynamic/vpn-services.yml`
-3. If VPN-routed: use `network_mode: service:gluetun`
-4. Sync compose + traefik config to NAS
-
-## Service Notes
-
-| Service | Note |
-|---------|------|
-| Pi-hole | v6 API uses password not separate token |
-| Gluetun | VPN gateway. Services using it share IP 192.168.100.3. Uses Pi-hole DNS. `FIREWALL_OUTBOUND_SUBNETS` must include LAN for HA access |
-| Cloudflared | SSL terminated at Cloudflare, Traefik receives HTTP |
-| wg-easy | Generate hash: `docker run --rm ghcr.io/wg-easy/wg-easy wgpw 'PASSWORD'` |
-| FlareSolverr | Cloudflare bypass for Prowlarr. Configure in Prowlarr: Settings → Indexers → add FlareSolverr with Host `flaresolverr` |
-
-## Container Updates
-
-UGOS handles automatic updates natively (no Watchtower needed):
-- **Docker → Management → Image update**
-- Update detection: enabled
-- Update as scheduled: weekly
-
-## Backups
-
-Daily backup to USB stick at `/mnt/arr-backup`. Keeps 7 days of backups.
-
-```bash
-# Install backup script
-sudo cp scripts/arr-backup.sh /usr/local/bin/ && sudo chmod +x /usr/local/bin/arr-backup.sh
-
-# Add cron job (3am daily)
-(crontab -l 2>/dev/null; echo "0 3 * * * /usr/local/bin/arr-backup.sh") | sudo crontab -
-
-# Manual backup
-sudo /usr/local/bin/arr-backup.sh
-
-# Check logs
-cat /var/log/arr-backup.log
-```
-
-Backs up: compose files, .env, traefik config, all app data (Sonarr, Radarr, Prowlarr, qBittorrent, Jellyfin, Jellyseerr, Bazarr, Uptime Kuma).
-
-## Uptime Kuma SQLite
-
-Add monitors via SQLite (must include `user_id=1`):
-```bash
-docker exec uptime-kuma sqlite3 /app/data/kuma.db "INSERT INTO monitor (name, type, url, interval, accepted_statuscodes_json, ignore_tls, active, maxretries, user_id) VALUES ('Service Name', 'http', 'http://url', 60, '[\"200-299\"]', 0, 1, 3, 1);"
-docker restart uptime-kuma
-```
-
-For HTTPS with self-signed cert or 401 auth page: `ignore_tls=1`, `accepted_statuscodes_json='[\"200-299\",\"401\"]'`
-
-## .env Gotchas
-
-**Bcrypt hashes must be quoted** (they contain `$` which Docker interprets as variables):
-```bash
-# Wrong
-WG_PASSWORD_HASH=$2a$12$abc...
-TRAEFIK_DASHBOARD_AUTH=admin:$2y$05$abc...
-
-# Correct
-WG_PASSWORD_HASH='$2a$12$abc...'
-TRAEFIK_DASHBOARD_AUTH='admin:$2y$05$abc...'
-```
+## Gotchas
+- .env bcrypt hashes must be single-quoted (they contain `$`).
+- Image updates need `pull` then `up -d` (restart keeps the old image).
+- Pin image tags (Jellyfin = the version running now, wg-easy:14). UGOS auto-updates weekly.
+- Sonarr/Radarr/Prowlarr/Bazarr must have Forms auth enabled.
