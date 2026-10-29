@@ -21,8 +21,6 @@
 
 ## Storage layout (lowercase, never create /volume1/Media)
 - Media: /volume1/media and /volume3/media2.
-- Downloads landing folder: /volume1/media/downloads/{tv,movies}. It must stay on
-  the same filesystem as the library it imports into, so hardlinks work.
 - App config: /volume2/docker/<app>/ (e.g. /volume2/docker/jellyfinht/config).
 - Docker root: /volume2/@docker. Deploy dir (clone of my fork): /volume2/docker/arr-stack.
 
@@ -43,11 +41,16 @@
 ## My differences from upstream
 - VPN: NordVPN via Gluetun, OpenVPN, service credentials
   (NORDVPN_USER / NORDVPN_PASSWORD in .env). Not Surfshark.
-- No local torrent client. Remove qBittorrent (service, port 8085, volume).
-  Downloads happen on an external seedbox, synced by an rsync cron on the NAS host
-  (outside Gluetun) into /volume1/media/downloads/{tv,movies}. Sonarr/Radarr use
-  Remote Path Mappings from the seedbox paths to those folders as the containers
-  see them. "Remove Completed" stays on so the seedbox cleans up after seeding.
+- Downloads: external seedbox only. No Transmission, qBittorrent or torrent client on
+  the NAS (remove qBittorrent from the compose: service, port 8085, volume). Never
+  create an rsync cron.
+- Syncthing (already running, managed in Dockhand; never redeploy or touch it) syncs
+  the seedbox into /volume2/docker/syncthing/data1/sync. Sonarr/Radarr mount that
+  folder as /data1 (NOT the parent data1). Their Remote Path Mappings depend on it.
+  Copy every existing mount exactly as `docker inspect` shows it now, keep PUID=1000
+  PGID=10. Imports copy into the library (different filesystem): expected.
+- Remove the leftover /volume2/docker/transmission/downloads:/downloads mount from
+  Sonarr/Radarr only after I confirm no setting uses /downloads.
 - Replace 192.168.0.136 with 192.168.50.139 and 192.168.0.0/24 with 192.168.50.0/24
   (gluetun FIREWALL_OUTBOUND_SUBNETS). Keep the 192.168.100.0/24 Docker network.
 
@@ -68,6 +71,8 @@
 - Traefik host ports: 8080 (HTTP), 8443, dashboard 9090. Do NOT move UGOS nginx.
 - Cloudflare Tunnel routes point to 192.168.50.139:8080. Publish only Jellyfin
   and Jellyseerr.
+- Do not stop, remove or reconfigure Nginx-Proxy-Manager or cloudflare-ddns until I
+  confirm remote access works through Traefik. Never publish the UGOS admin UI.
 
 ## Deployment order
 Network `traefik-proxy` -> traefik -> cloudflared -> arr-stack (gluetun first; verify
