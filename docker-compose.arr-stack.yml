@@ -251,11 +251,12 @@ services:
       retries: 1
 
   #############################################
-  # Request Manager (Jellyseerr)             #
+  # Request Manager (Seerr)                  #
   #############################################
   jellyseerr:
-    image: fallenbagel/jellyseerr:latest
+    image: ghcr.io/seerr-team/seerr:latest
     container_name: jellyseerr
+    init: true
     ports:
       - "192.168.50.139:5055:5055"  # Local network access
     environment:
