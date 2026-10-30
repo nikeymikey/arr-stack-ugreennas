@@ -74,12 +74,6 @@ certificatesResolvers:
 
 # Providers
 providers:
-  docker:
-    endpoint: "unix:///var/run/docker.sock"
-    exposedByDefault: false
-    network: traefik-proxy
-    watch: true
-
   file:
     directory: /dynamic
     watch: true

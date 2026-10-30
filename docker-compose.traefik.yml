@@ -18,7 +18,6 @@ services:
       - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
       - TZ=Europe/London
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/traefik.yml:/traefik.yml:ro
       - ./traefik/dynamic:/dynamic:ro
       - ./traefik/acme.json:/acme.json
