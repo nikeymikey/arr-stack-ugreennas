@@ -47,3 +47,6 @@
   run: up -d gluetun sonarr radarr prowlarr.
 - I edit files in Notepad on Windows, with no tabs in YAML. Use block-form YAML lists for long commands.
 - sonarr-old and radarr-old are stopped rollback containers. Never run them alongside the new ones.
+- Backups: scripts/arr-backup-volume2.sh runs at 03:00 from root's crontab and writes to
+  /home/Nikeymikey/backups/arr-stack (14 days kept). The old scripts/arr-backup.sh assumes another
+  layout and must never be installed.
