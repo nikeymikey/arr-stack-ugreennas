@@ -113,7 +113,9 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf -m 5 http://localhost:8989/ >/dev/null && curl -sf -m 8 -o /dev/null https://www.cloudflare.com/cdn-cgi
+      test:
+        - CMD-SHELL
+        - 'curl -sf -m 5 http://localhost:8989/ >/dev/null && curl -sf -m 8 -o /dev/null https://www.cloudflare.com/cdn-cgi/trace'
       interval: 2m
       timeout: 10s
       retries: 3
@@ -139,7 +141,9 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf -m 5 http://localhost:9696/ >/dev/null && curl -sf -m 8 -o /dev/null https://www.cloudflare.com/cdn-cgi
+      test:
+        - CMD-SHELL
+        - 'curl -sf -m 5 http://localhost:9696/ >/dev/null && curl -sf -m 8 -o /dev/null https://www.cloudflare.com/cdn-cgi/trace'
       interval: 2m
       timeout: 10s
       retries: 3
@@ -168,7 +172,9 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf -m 5 http://localhost:7878/ >/dev/null && curl -sf -m 8 -o /dev/null https://www.cloudflare.com/cdn-cgi
+      test:
+        - CMD-SHELL
+        - 'curl -sf -m 5 http://localhost:7878/ >/dev/null && curl -sf -m 8 -o /dev/null https://www.cloudflare.com/cdn-cgi/trace'
       interval: 2m
       timeout: 10s
       retries: 3
