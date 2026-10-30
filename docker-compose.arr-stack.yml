@@ -177,7 +177,7 @@ services:
   # DNS & Ad-blocking (Pi-hole)              #
   #############################################
   pihole:
-    image: pihole/pihole:latest
+    image: pihole/pihole:2026.10.0
     container_name: pihole
     ports:
       - "192.168.50.139:53:53/tcp"  # Bind to NAS IP to avoid conflict with localhost dnsmasq
