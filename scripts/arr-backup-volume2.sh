@@ -63,6 +63,7 @@ backup_dir bazarr-config    "$STACK/bazarr/config"
 backup_dir seerr-config     "$STACK/jellyseerr/config"
 backup_dir gluetun-config   "$STACK/gluetun-config"
 backup_dir syncthing-config /volume2/docker/syncthing/config
+backup_dir thelounge-config /volume2/docker/thelounge
 # Jellyfin-HT is copied while running. Add --exclude='*/metadata' if the archive is too large.
 backup_dir jellyfin-config  /volume2/docker/jellyfinht/config --exclude='*/transcodes' --exclude='*/log' --exclude='*/cache'
 
