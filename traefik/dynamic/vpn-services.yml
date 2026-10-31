@@ -20,6 +20,16 @@ http:
       tls:
         certResolver: cloudflare
       service: arcade
+      
+    irc:
+      rule: "Host(`irc.nikeymikey.com`)"
+      entryPoints:
+        - websecure
+      middlewares:
+        - cloudflare-only
+      tls:
+        certResolver: cloudflare
+      service: thelounge  
 
     # --- LAN only: web entrypoint (host :8080, never port-forwarded) ---
     sonarr:
@@ -145,7 +155,12 @@ http:
       loadBalancer:
         servers:
           - url: "http://192.168.50.139:4235"
-
+          
+    thelounge:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.50.139:9001"         
+          
     jellyseerr:
       loadBalancer:
         servers:
@@ -170,3 +185,4 @@ http:
       loadBalancer:
         servers:
           - url: "http://192.168.100.13:3001"
+         
