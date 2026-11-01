@@ -57,11 +57,13 @@ http:
       service: prowlarr
 
     jellyseerr:
-      rule: "Host(`jellyseerr.nikeymikey.com`)"
+      rule: "Host(`requests.nikeymikey.com`)"
       entryPoints:
-        - web
+        - websecure
       middlewares:
-        - lan-only
+        - cloudflare-only
+      tls:
+        certResolver: cloudflare
       service: jellyseerr
 
     bazarr:
