@@ -7,7 +7,7 @@
   `docker system prune`, `rm -rf` or `--remove-orphans`.
 - After any edit run `git diff --stat` and report exactly what changed. I verify it myself.
 - Do not edit docs/, README.md or the plex files. Do not touch Dockhand-managed containers
-  (Jellyfin-HT, Syncthing, RetroAssembly and others).
+  (Jellyfin-HT, Syncthing, RetroAssembly, The Lounge, cloudflare-ddns and others).
 
 ## NAS
 - `ssh nas` (key auth, docker group, no sudo for docker). NAS IP 192.168.50.139,
@@ -20,13 +20,22 @@
 ## Stack as deployed
 - Compose files in use: docker-compose.traefik.yml and docker-compose.arr-stack.yml.
   Not used: cloudflared, plex. Not running: Uptime Kuma.
-- Public access: Cloudflare proxied DNS for tv1 and arcade only, then an Origin Rule rewriting the port to 8443,
-  then the router forward 8443, then Traefik websecure (certificates via the Cloudflare DNS challenge).
-  Both routers use the cloudflare-only middleware. Everything else is lan-only on the web entrypoint (:8080)
-  and is never forwarded.
+- Public hostnames (all four): tv1 (Jellyfin-HT, 192.168.50.139:8096), arcade (Retroassembly, :4235),
+  irc (The Lounge, :9001) and requests (Seerr, container jellyseerr at 192.168.100.8:5055).
+  Path: Cloudflare proxied DNS -> Origin Rule rewriting the port to 8443 (its hostname list must include
+  all four) -> router forward 8443 -> Traefik websecure (certificates via the Cloudflare DNS challenge).
+  Every public router uses the cloudflare-only middleware. Everything else is lan-only on the web
+  entrypoint (:8080) and is never forwarded.
+- Adding another public hostname needs: a proxied Cloudflare DNS record, the hostname added to the
+  Origin Rule, a router (websecure, cloudflare-only, certResolver cloudflare) and a service in
+  traefik/dynamic/vpn-services.yml, YAML validated before pushing, and the app's own proxy settings checked.
+- The Lounge (private mode, reverseProxy: true in /volume2/docker/thelounge/config.js) and Seerr
+  (Application URL https://requests.nikeymikey.com, proxy support on, Sonarr/Radarr External URLs set to
+  the NAS address) are configured for public use.
 - NAS admin and the WireGuard UI are reached over WireGuard (wg-easy, UDP 51820, split tunnel, DNS-only
   record wg.nikeymikey.com kept current by cloudflare-ddns). nas1 and Nginx-Proxy-Manager are retired.
-- Router forwards: 8443 TCP, 51820 UDP, 22000 (Syncthing). Never forward 80, 81, 443, 9090, 9999 or 51821.
+- Router forwards: 8443 TCP, 51820 UDP, 22000 (Syncthing). Never forward 80, 81, 443, 8096, 9001, 9090,
+  9999 or 51821.
 - Traefik v3.0.4 uses the file provider only (the Docker provider was removed because the NAS's Docker API
   rejects its client). Routes live in traefik/dynamic/vpn-services.yml. Validate YAML before pushing.
 - Jellyfin-HT is not in the compose. It is managed in Dockhand (host network, 192.168.50.139:8096,
@@ -46,7 +55,13 @@
   (deunhealth plus the outside check). If Gluetun was RECREATED (image change or --force-recreate),
   run: up -d gluetun sonarr radarr prowlarr.
 - I edit files in Notepad on Windows, with no tabs in YAML. Use block-form YAML lists for long commands.
+  Notepad's Replace box truncates at 127 characters, so type edits into the document body.
 - sonarr-old and radarr-old are stopped rollback containers. Never run them alongside the new ones.
 - Backups: scripts/arr-backup-volume2.sh runs at 03:00 from root's crontab and writes to
-  /home/Nikeymikey/backups/arr-stack (14 days kept). The old scripts/arr-backup.sh assumes another
+  /home/Nikeymikey/backups/arr-stack (14 days kept; includes Sonarr, Radarr, Bazarr, Seerr, Gluetun,
+  Syncthing, The Lounge, Jellyfin-HT, Prowlarr, Pi-hole, wg-easy and the stack files). It stops Sonarr,
+  Radarr, Prowlarr, Bazarr and Seerr for about four minutes. The old scripts/arr-backup.sh assumes another
   layout and must never be installed.
+- Never paste long lines into nano (a paste once got mangled and broke the crontab). Write root's crontab
+  with: sudo tee /tmp/rootcron <<'EOF' ... EOF, then sudo crontab /tmp/rootcron.
+- cron.log holds a copy of the backup script's normal output as well as any errors. Only extra lines mean trouble.
