@@ -7,7 +7,7 @@ DEST_ROOT="/home/Nikeymikey/backups/arr-stack"
 STACK="/volume2/docker/arr-stack"
 KEEP_DAYS=14
 STOP_APPS=1
-APPS="sonarr radarr prowlarr bazarr jellyseerr profilarr rewindarr"
+APPS="sonarr radarr prowlarr bazarr jellyseerr profilarr rewindarr maintainerr"
 
 [ "$(id -u)" = 0 ] || { echo "Run with sudo" >&2; exit 1; }
 [ -d "$(dirname "$DEST_ROOT")" ] || { echo "Create $(dirname "$DEST_ROOT") first" >&2; exit 1; }
@@ -76,6 +76,8 @@ else
 fi
 backup_dir tracearr-backup /volume2/docker/tracearr/backup
 backup_dir rewindarr-config /volume2/docker/rewindarr/config
+# Maintainerr: SQLite (stopped above). data/ui is a copy of the web UI rebuilt on every boot.
+backup_dir maintainerr-data /volume2/docker/maintainerr/data --exclude='data/ui'
 
 tar -czf "$DEST/stack-files.tar.gz" -C "$STACK" .env traefik/acme.json traefik/traefik.yml traefik/dynamic \
   docker-compose.arr-stack.yml docker-compose.traefik.yml docker-compose.extras.yml 2>>"$LOG" || fail "stack-files: tar reported errors"
