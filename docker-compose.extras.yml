@@ -147,3 +147,27 @@ services:
       retries: 5
     restart: unless-stopped
     logging: *default-logging
+
+  #############################################
+  # Year-in-review stats (Rewindarr), Jellyfin data via Tracearr
+  # Starts as root, then drops to PUID:PGID via su-exec (entrypoint).
+  #############################################
+  rewindarr:
+    image: ghcr.io/raunot/rewindarr:5.6.0
+    container_name: rewindarr
+    ports:
+      - "192.168.50.139:8383:8383"
+    environment:
+      - NEXTAUTH_SECRET=${REWINDARR_NEXTAUTH_SECRET:?set in .env}
+      - NEXTAUTH_URL=http://192.168.50.139:8383
+      - NEXT_PUBLIC_SITE_URL=http://192.168.50.139:8383
+      - TZ=Europe/London
+      - PUID=1000
+      - PGID=10
+    volumes:
+      - /volume2/docker/rewindarr/config:/app/config
+    networks:
+      traefik-proxy:
+        ipv4_address: 192.168.100.14
+    restart: unless-stopped
+    logging: *default-logging
