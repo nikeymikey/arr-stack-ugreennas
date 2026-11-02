@@ -192,3 +192,46 @@ services:
         ipv4_address: 192.168.100.15
     restart: unless-stopped
     logging: *default-logging
+
+  #############################################
+  # Transcode automation (Tdarr). DORMANT: no libraries, node paused, 0 workers,
+  # media read-only. No login (auth off): localhost only, UI via
+  # ssh -L 8265:127.0.0.1:8265 nas
+  #############################################
+  tdarr:
+    image: ghcr.io/haveagitgat/tdarr:2.96.01
+    container_name: tdarr
+    ports:
+      - "127.0.0.1:8265:8265"
+    environment:
+      - TZ=Europe/London
+      - PUID=1000
+      - PGID=10
+      - UMASK=002
+      - serverIP=0.0.0.0
+      - serverPort=8266
+      - webUIPort=8265
+      - auth=false
+      - internalNode=true
+      - inContainer=true
+      - ffmpegVersion=7
+      - nodeName=nas-internal
+      - startPaused=true
+      - transcodecpuWorkers=0
+      - transcodegpuWorkers=0
+      - healthcheckcpuWorkers=0
+      - healthcheckgpuWorkers=0
+      - maxLogSizeMB=10
+      - cronPluginUpdate=
+    volumes:
+      - /volume2/docker/tdarr/server:/app/server
+      - /volume2/docker/tdarr/configs:/app/configs
+      - /volume2/docker/tdarr/logs:/app/logs
+      - /volume2/docker/tdarr/temp:/temp
+      - /volume1/media:/media1:ro
+      - /volume3/media2:/media2:ro
+    networks:
+      traefik-proxy:
+        ipv4_address: 192.168.100.16
+    restart: unless-stopped
+    logging: *default-logging
