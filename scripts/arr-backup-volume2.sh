@@ -7,7 +7,7 @@ DEST_ROOT="/home/Nikeymikey/backups/arr-stack"
 STACK="/volume2/docker/arr-stack"
 KEEP_DAYS=14
 STOP_APPS=1
-APPS="sonarr radarr prowlarr bazarr jellyseerr profilarr"
+APPS="sonarr radarr prowlarr bazarr jellyseerr profilarr rewindarr"
 
 [ "$(id -u)" = 0 ] || { echo "Run with sudo" >&2; exit 1; }
 [ -d "$(dirname "$DEST_ROOT")" ] || { echo "Create $(dirname "$DEST_ROOT") first" >&2; exit 1; }
@@ -75,6 +75,7 @@ else
   fail "tracearr-db: pg_dump failed"
 fi
 backup_dir tracearr-backup /volume2/docker/tracearr/backup
+backup_dir rewindarr-config /volume2/docker/rewindarr/config
 
 tar -czf "$DEST/stack-files.tar.gz" -C "$STACK" .env traefik/acme.json traefik/traefik.yml traefik/dynamic \
   docker-compose.arr-stack.yml docker-compose.traefik.yml docker-compose.extras.yml 2>>"$LOG" || fail "stack-files: tar reported errors"
