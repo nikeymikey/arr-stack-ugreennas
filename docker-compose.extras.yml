@@ -171,3 +171,24 @@ services:
         ipv4_address: 192.168.100.14
     restart: unless-stopped
     logging: *default-logging
+
+  #############################################
+  # Media cleanup rules (Maintainerr). NO built-in login: localhost only,
+  # reach the UI with: ssh -L 6246:127.0.0.1:6246 nas
+  # Dry-run policy: every rule group "Do nothing", an *arr selected, no media mount.
+  #############################################
+  maintainerr:
+    image: ghcr.io/maintainerr/maintainerr:3.31.0
+    container_name: maintainerr
+    user: "1000:10"
+    ports:
+      - "127.0.0.1:6246:6246"
+    environment:
+      - TZ=Europe/London
+    volumes:
+      - /volume2/docker/maintainerr/data:/opt/data
+    networks:
+      traefik-proxy:
+        ipv4_address: 192.168.100.15
+    restart: unless-stopped
+    logging: *default-logging
