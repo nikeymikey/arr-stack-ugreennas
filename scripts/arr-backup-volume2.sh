@@ -7,7 +7,7 @@ DEST_ROOT="/home/Nikeymikey/backups/arr-stack"
 STACK="/volume2/docker/arr-stack"
 KEEP_DAYS=14
 STOP_APPS=1
-APPS="sonarr radarr prowlarr bazarr jellyseerr"
+APPS="sonarr radarr prowlarr bazarr jellyseerr profilarr"
 
 [ "$(id -u)" = 0 ] || { echo "Run with sudo" >&2; exit 1; }
 [ -d "$(dirname "$DEST_ROOT")" ] || { echo "Create $(dirname "$DEST_ROOT") first" >&2; exit 1; }
@@ -66,9 +66,10 @@ backup_dir syncthing-config /volume2/docker/syncthing/config
 backup_dir thelounge-config /volume2/docker/thelounge
 # Jellyfin-HT is copied while running. Add --exclude='*/metadata' if the archive is too large.
 backup_dir jellyfin-config  /volume2/docker/jellyfinht/config --exclude='*/transcodes' --exclude='*/log' --exclude='*/cache'
+backup_dir profilarr-config /volume2/docker/profilarr/config
 
 tar -czf "$DEST/stack-files.tar.gz" -C "$STACK" .env traefik/acme.json traefik/traefik.yml traefik/dynamic \
-  docker-compose.arr-stack.yml docker-compose.traefik.yml 2>>"$LOG" || fail "stack-files: tar reported errors"
+  docker-compose.arr-stack.yml docker-compose.traefik.yml docker-compose.extras.yml 2>>"$LOG" || fail "stack-files: tar reported errors"
 verify stack-files
 
 for v in prowlarr-config pihole-etc-pihole pihole-etc-dnsmasq wireguard-easy-config; do
