@@ -67,6 +67,14 @@ backup_dir thelounge-config /volume2/docker/thelounge
 # Jellyfin-HT is copied while running. Add --exclude='*/metadata' if the archive is too large.
 backup_dir jellyfin-config  /volume2/docker/jellyfinht/config --exclude='*/transcodes' --exclude='*/log' --exclude='*/cache'
 backup_dir profilarr-config /volume2/docker/profilarr/config
+# Tracearr: logical dump while running (consistent). Redis is a rebuildable cache/queue and is skipped.
+if docker exec tracearr-db sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -h 127.0.0.1 -U tracearr -Fc tracearr' \
+     > "$DEST/tracearr-db.dump" 2>>"$LOG" && [ -s "$DEST/tracearr-db.dump" ]; then
+  log "ok tracearr-db ($(du -h "$DEST/tracearr-db.dump" | cut -f1))"
+else
+  fail "tracearr-db: pg_dump failed"
+fi
+backup_dir tracearr-backup /volume2/docker/tracearr/backup
 
 tar -czf "$DEST/stack-files.tar.gz" -C "$STACK" .env traefik/acme.json traefik/traefik.yml traefik/dynamic \
   docker-compose.arr-stack.yml docker-compose.traefik.yml docker-compose.extras.yml 2>>"$LOG" || fail "stack-files: tar reported errors"
