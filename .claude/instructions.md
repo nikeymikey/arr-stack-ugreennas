@@ -42,26 +42,84 @@
   user 1000:10, /dev/dri). Its Known proxies include Traefik and Cloudflare ranges.
 - Gluetun uses NordVPN (OpenVPN, service credentials in .env). Sonarr, Radarr and Prowlarr share its
   network. Their health checks include an outside-connection test, and deunhealth restarts them when it fails.
-- Downloads: external seedbox (rTorrent) only, delivered by Syncthing to
-  /volume2/docker/syncthing/data1/sync, mounted as /data1 in Sonarr and Radarr. No torrent client on the NAS.
+- Downloads: all on the external seedbox. Usenet (SABnzbd) is the main, automatic source and is enabled in
+  Sonarr and Radarr. Torrents (rTorrent) are handled manually for now: rTorrent is disabled in Radarr
+  (and in Sonarr if I disable it)". rTorrent is now disabled in both apps..
+  Finished files reach the NAS via Syncthing at /volume2/docker/syncthing/data1/sync, mounted as /data1
+  (remote path mapping seedbox /downloads/sync -> /data1). No download client runs on the NAS.
+- Delay profiles (both apps): 0 delay, prefer Usenet. Profilarr owns them (delay sync, manual only).
 - Pinned: pihole, flaresolverr, gluetun (digest), wg-easy:14, traefik:v3.0. Sonarr, Radarr, Prowlarr,
   Bazarr and Seerr stay on latest and are updated by me through Dockhand.
 - Static IPs on traefik-proxy: traefik .2, gluetun .3, pihole .5, wg-easy .6, seerr .8, bazarr .9,
   flaresolverr .10. Pi-hole is 10.8.1.200 on vpn-net.
 
 ## Gotchas
-- .env hashes must be single-quoted. A plain restart does not re-read .env: use up -d --force-recreate.
+- .env hashes and secrets must be single-quoted. A plain restart does not re-read .env: use up -d --force-recreate.
+  .env must stay named ".env" (Windows editors can drop the dot) and be chmod 600.
 - Gluetun restarts: Sonarr, Radarr and Prowlarr recover by themselves within about 6 minutes
   (deunhealth plus the outside check). If Gluetun was RECREATED (image change or --force-recreate),
   run: up -d gluetun sonarr radarr prowlarr.
 - I edit files in Notepad on Windows, with no tabs in YAML. Use block-form YAML lists for long commands.
   Notepad's Replace box truncates at 127 characters, so type edits into the document body.
+- Commands with several layers of quotes: run them inside an interactive `ssh nas` session, not as
+  ssh nas "..." from PowerShell (PowerShell expands $(...) locally and breaks the quoting).
 - sonarr-old and radarr-old are stopped rollback containers. Never run them alongside the new ones.
+- Never run mass searches ("Search all", "Cutoff unmet", bulk series searches) in Sonarr or Radarr:
+  there are many upgrade candidates after the Profilarr sync and it would flood the seedbox.
+  Check /volume3 free space (it is nearly full) before any large batch of upgrades.
 - Backups: scripts/arr-backup-volume2.sh runs at 03:00 from root's crontab and writes to
   /home/Nikeymikey/backups/arr-stack (14 days kept; includes Sonarr, Radarr, Bazarr, Seerr, Gluetun,
-  Syncthing, The Lounge, Jellyfin-HT, Prowlarr, Pi-hole, wg-easy and the stack files). It stops Sonarr,
-  Radarr, Prowlarr, Bazarr and Seerr for about four minutes. The old scripts/arr-backup.sh assumes another
-  layout and must never be installed.
+  Syncthing, The Lounge, Jellyfin-HT, Prowlarr, Pi-hole, wg-easy, Profilarr, Tracearr (pg_dump),
+  Rewindarr, Maintainerr and the stack files). It stops Sonarr, Radarr, Prowlarr, Bazarr, Seerr,
+  Profilarr, Rewindarr and Maintainerr for about five minutes. The old scripts/arr-backup.sh assumes
+  another layout and must never be installed. Add each new app's lines to the script only after its
+  container is healthy, then run bash -n and a manual backup.
 - Never paste long lines into nano (a paste once got mangled and broke the crontab). Write root's crontab
   with: sudo tee /tmp/rootcron <<'EOF' ... EOF, then sudo crontab /tmp/rootcron.
-- cron.log holds a copy of the backup script's normal output as well as any errors. Only extra lines mean trouble.
+- cron.log holds a copy of the backup script's normal output as well as any errors. Four pg_dump lines
+  ("warning: circular foreign-key constraints", "detail: continuous_agg" and two "hint" lines) appear
+  every night and are normal. Only other extra lines mean trouble.
+- SSH port forwarding is enabled by `AllowTcpForwarding yes` at line 87 of /etc/ssh/sshd_config
+  (backup /etc/ssh/sshd_config.bak-20261102) so the Maintainerr tunnel works. A UGOS update may reset
+  it: if the tunnel fails with "administratively prohibited", redo the edit, run sshd -t, then reload sshd.
+
+## Extras (docker-compose.extras.yml, project name arr-extras)
+- Always: docker compose -f docker-compose.extras.yml up -d <service>. Never combine it with the other compose files.
+- No Traefik routes for the extras yet. Reach them on 192.168.50.139:<port>.
+- Static IPs on traefik-proxy: profilarr .11; reserved tracearr .12, rewindarr .14, maintainerr .15, tdarr .16.
+  .13 is reserved for uptime-kuma.
+- Profilarr v2.3.1 (+profilarr-parser, internal network) at http://192.168.50.139:6868.
+  Config /volume2/docker/profilarr/config. /volume2/docker/profilarr/data is old v1 data (incompatible, unused).
+  ORIGIN takes ONE url in 2.3.1. Stopped during the nightly backup.
+- Profilarr manages: quality profiles (Radarr: 1080p Balanced, 1080p Quality, 2160p Quality, 2160p Remux,
+  720p Quality; Sonarr: 1080p Balanced, 1080p Compact, 2160p Quality, 2160p Remux) and delay profiles
+  (0 delay, prefer Usenet). All syncs are manual; jobs (upgrades, renames, cleanup) are off.
+  Media-management sync: never.
+- Syncing any profile rewrites shared custom formats used by every Dictionarry profile. Back up first.
+- Linking a new instance in Profilarr applies a default 600-min delay profile automatically. Check delay
+  profiles after linking.
+- "Upgrades Allowed" is on in the Sonarr/Radarr profiles (RSS upgrades happen); Profilarr's upgrade job is off.
+- Tracearr 3.1.3 at http://192.168.50.139:3000, runs as user 1000:10 (UGOS refuses the image's own uid 1001
+  on bind mounts). tracearr-db (timescaledb-ha pg18.4-ts2.29.1) and tracearr-redis (redis 8.2-alpine) on
+  internal network tracearr-internal, no published ports. Data in /volume2/docker/tracearr/{pgdata,redis,
+  backup,image-cache}. Polls Jellyfin-HT directly (server "MikesServer2"); Tracearr Jellyfin plugin installed (0.6.0.0): live events arrive via [PluginSSE] lines; 404s now mean trouble. .env: TRACEARR_JWT_SECRET, TRACEARR_COOKIE_SECRET, TRACEARR_DB_PASSWORD
+  (hex only). BETTER_AUTH_URL unset (set to the LAN URL only if login breaks).
+- Backup: pg_dump of tracearr-db while running (not stopped) plus tracearr/backup; Redis skipped. The four
+  "pg_dump: warning/detail/hint ... circular foreign-key ... continuous_agg" lines in cron.log are normal.
+  Restore into an empty TimescaleDB with timescaledb_pre_restore() / timescaledb_post_restore().
+- .env must stay named ".env" (Windows editors can drop the dot) and chmod 600.
+- /home/Nikeymikey/backups/pre-profilarr-sync-20261102 = state before any Profilarr sync (delay profiles
+  already 600 min there). Not auto-pruned; delete by hand when no longer needed.
+  - Maintainerr 3.31.0 has NO login: bound to 127.0.0.1:6246 only. UI via: ssh -L 6246:127.0.0.1:6246 nas,
+  then http://localhost:6246. Runs as user 1000:10. Data /volume2/docker/maintainerr/data (backup skips data/ui).
+  Linked: Jellyfin (API key "Maintainerr"), Radarr, Sonarr. Not linked: Seerr. No media mount.
+- Rule groups: every group must be action "Do nothing" (arrAction 4), have Radarr/Sonarr selected (with no
+  *arr the only actions are Delete-from-Jellyfin or Do nothing) and "Keep in Maintainerr only" on. Groups are
+  currently INACTIVE. "Take action after days" only appears for real actions.
+- Active groups run automatically every 8 h (00:00, 08:00, 16:00) without Run Rules.
+- Some Maintainerr GET routes change state (/api/collections/activate|deactivate/:id). Read-only checks use
+  /api/rules, /api/collections, /api/collections/media/:id/content/:page only.
+- Keep Jellyfin "Group movies/shows into collections" OFF (Dashboard > Libraries > Display), Maintainerr #2554.
+  TMDb Box Sets plugin collections affect rules that use collection fields.
+  
+  
