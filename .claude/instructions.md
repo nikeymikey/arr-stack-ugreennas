@@ -111,8 +111,8 @@
 - .env must stay named ".env" (Windows editors can drop the dot) and chmod 600.
 - /home/Nikeymikey/backups/pre-profilarr-sync-20261102 = state before any Profilarr sync (delay profiles
   already 600 min there). Not auto-pruned; delete by hand when no longer needed.
-  - Maintainerr 3.31.0 has NO login: bound to 127.0.0.1:6246 only. UI via: ssh -L 6246:127.0.0.1:6246 nas,
-  then http://localhost:6246. Runs as user 1000:10. Data /volume2/docker/maintainerr/data (backup skips data/ui).
+  - Maintainerr 3.31.0 has NO login: LAN only at http://192.168.50.139:6246 (owner's choice, 2026-11-07).
+  Never add a Traefik route or forward. Runs as user 1000:10. Data /volume2/docker/maintainerr/data (backup skips data/ui).
   Linked: Jellyfin (API key "Maintainerr"), Radarr, Sonarr. Not linked: Seerr. No media mount.
 - Rule groups: every group must be action "Do nothing" (arrAction 4), have Radarr/Sonarr selected (with no
   *arr the only actions are Delete-from-Jellyfin or Do nothing) and "Keep in Maintainerr only" on. Groups are

@@ -173,8 +173,8 @@ services:
     logging: *default-logging
 
   #############################################
-  # Media cleanup rules (Maintainerr). NO built-in login: localhost only,
-  # reach the UI with: ssh -L 6246:127.0.0.1:6246 nas
+  # Media cleanup rules (Maintainerr). NO built-in login: LAN only on
+  # 192.168.50.139:6246 by the owner's choice. Never route or forward it.
   # Dry-run policy: every rule group "Do nothing", an *arr selected, no media mount.
   #############################################
   maintainerr:
@@ -182,7 +182,7 @@ services:
     container_name: maintainerr
     user: "1000:10"
     ports:
-      - "127.0.0.1:6246:6246"
+      - "192.168.50.139:6246:6246"
     environment:
       - TZ=Europe/London
     volumes:
