@@ -99,7 +99,7 @@
 - Linking a new instance in Profilarr applies a default 600-min delay profile automatically. Check delay
   profiles after linking.
 - "Upgrades Allowed" is on in the Sonarr/Radarr profiles (RSS upgrades happen); Profilarr's upgrade job is off.
-- Tracearr 3.1.3 at http://192.168.50.139:3000, runs as user 1000:10 (UGOS refuses the image's own uid 1001
+- Tracearr 3.1.5 at http://192.168.50.139:3000, runs as user 1000:10 (UGOS refuses the image's own uid 1001
   on bind mounts). tracearr-db (timescaledb-ha pg18.4-ts2.29.1) and tracearr-redis (redis 8.2-alpine) on
   internal network tracearr-internal, no published ports. Data in /volume2/docker/tracearr/{pgdata,redis,
   backup,image-cache}. Polls Jellyfin-HT directly (server "MikesServer2"); Tracearr Jellyfin plugin installed (0.6.0.0): live events arrive via [PluginSSE] lines; 404s now mean trouble. .env: TRACEARR_JWT_SECRET, TRACEARR_COOKIE_SECRET, TRACEARR_DB_PASSWORD
