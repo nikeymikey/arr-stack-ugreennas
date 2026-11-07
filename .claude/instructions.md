@@ -70,8 +70,9 @@
 - Backups: scripts/arr-backup-volume2.sh runs at 03:00 from root's crontab and writes to
   /home/Nikeymikey/backups/arr-stack (14 days kept; includes Sonarr, Radarr, Bazarr, Seerr, Gluetun,
   Syncthing, The Lounge, Jellyfin-HT, Prowlarr, Pi-hole, wg-easy, Profilarr, Tracearr (pg_dump),
-  Rewindarr, Maintainerr and the stack files). It stops Sonarr, Radarr, Prowlarr, Bazarr, Seerr,
-  Profilarr, Rewindarr and Maintainerr for about five minutes. The old scripts/arr-backup.sh assumes
+  Rewindarr, Maintainerr, Tdarr, Whisparr v2 and v3 and the stack files). It stops Sonarr, Radarr,
+  Prowlarr, Bazarr, Seerr, Profilarr, Rewindarr, Maintainerr, Tdarr, Whisparr and Whisparr3 for about
+  five minutes. The old scripts/arr-backup.sh assumes
   another layout and must never be installed. Add each new app's lines to the script only after its
   container is healthy, then run bash -n and a manual backup.
 - Never paste long lines into nano (a paste once got mangled and broke the crontab). Write root's crontab
@@ -86,8 +87,8 @@
 ## Extras (docker-compose.extras.yml, project name arr-extras)
 - Always: docker compose -f docker-compose.extras.yml up -d <service>. Never combine it with the other compose files.
 - No Traefik routes for the extras yet. Reach them on 192.168.50.139:<port>.
-- Static IPs on traefik-proxy: profilarr .11; reserved tracearr .12, rewindarr .14, maintainerr .15, tdarr .16.
-  .13 is reserved for uptime-kuma.
+- Static IPs on traefik-proxy: profilarr .11; reserved tracearr .12, rewindarr .14, maintainerr .15, tdarr .16,
+  whisparr .17, whisparr3 .18. .13 is reserved for uptime-kuma.
 - Profilarr v2.3.1 (+profilarr-parser, internal network) at http://192.168.50.139:6868.
   Config /volume2/docker/profilarr/config. /volume2/docker/profilarr/data is old v1 data (incompatible, unused).
   ORIGIN takes ONE url in 2.3.1. Stopped during the nightly backup.
@@ -121,5 +122,19 @@
   /api/rules, /api/collections, /api/collections/media/:id/content/:page only.
 - Keep Jellyfin "Group movies/shows into collections" OFF (Dashboard > Libraries > Display), Maintainerr #2554.
   TMDb Box Sets plugin collections affect rules that use collection fields.
+- Whisparr v2 (whisparr, hotio v2-2.2.0-release.231) at http://192.168.50.139:6969 and Whisparr v3 "Eros"
+  (whisparr3, hotio v3-3.6.5-release.1886, Radarr-based, API /api/v3) at http://192.168.50.139:6970.
+  LAN only with Forms login: never add a Traefik route, DNS record or forward. Both run with
+  PUID=1000/PGID=10 (hotio s6 fails under user:). Not managed by Profilarr (no Whisparr support).
+- Media: v2 /volume1/media-private, v3 /volume1/media-private-v3. Both are UGOS shared folders: create
+  new library folders in the UGOS GUI, not with mkdir (plain folders are invisible in the GUI).
+  Downloads: Syncthing folders data1/whisparr and data1/whisparr3, mounted as /downloads.
+- Seedbox: SABnzbd category and rTorrent label whisparr / whisparr3, rTorrent dir
+  /sda/0006/downloads/<label>. v3 remote path maps: /sda/0006/downloads/whisparr3/ and
+  /downloads/whisparr3/ -> /downloads/. v2 has only the /sda map: its SABnzbd downloads are
+  imported by hand, by choice.
+- Prowlarr apps "Whisparr" and "Whisparr v3", both tag adult (PornoLab is adult-only).
+- hotio Whisparr v3 creates user 'whisparr' on first start and prints its password in docker logs.
+  Never grep auth lines from its logs.
   
   
