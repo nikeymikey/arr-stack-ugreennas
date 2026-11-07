@@ -147,9 +147,11 @@
   (copies of library files only).
 - Guards: node starts paused (startPaused=true), all workers 0 in compose, auto plugin update off, no login.
   Do not unpause, raise workers or point a library at /media-private or /media-private-v3 until the owner
-  approves the test results. Flow: skip hevc/av1, skip 10-bit, skip above 1080p and below 720p, skip under
-  2 Mbps (1080p) / 1 Mbps (720p), hevc_qsv global_quality 23 (1080p) / 22 (720p), copy all audio and
-  subtitles, keep the container, keep the output only if it is smaller. Test outputs go to /tdarr-test/out;
-  never add Replace Original File until the owner approves.
+  approves the test results. Flow: skip hevc/av1, skip 10-bit, skip above 1080p, skip under 2 Mbps (1080p) /
+  1 Mbps (720p) / 500 kbps (SD), hevc_qsv global_quality 23 (1080p) / 22 (720p and SD), copy all audio and
+  subtitles, keep the container except avi/wmv -> mkv, keep the output only if it is smaller. SD (480p, 576p,
+  Other: 66 files, 37 GB, incl. 7 XviD avi and 7 WMV3/VC-1 wmv) uses software decode + QSV encode (QSV cannot
+  decode MPEG-4 Part 2). Test outputs go to /tdarr-test/out; never add Replace Original File until the owner
+  approves (an avi/wmv -> mkv swap changes the filename: rescan in Whisparr afterwards).
   
   
