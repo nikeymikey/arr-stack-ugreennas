@@ -136,5 +136,20 @@
 - Prowlarr apps "Whisparr" and "Whisparr v3", both tag adult (PornoLab is adult-only).
 - hotio Whisparr v3 creates user 'whisparr' on first start and prints its password in docker logs.
   Never grep auth lines from its logs.
+- Tdarr 2.96.01 (tdarr, http://127.0.0.1:8265 on the NAS only; reach it through an SSH tunnel). TEST PHASE.
+  Write-enabled on the two private libraries ONLY: /volume1/media-private -> /media-private and
+  /volume1/media-private-v3 -> /media-private-v3. /media1 and /media2 stay :ro: never run Tdarr on the
+  main libraries and never make those mounts writable.
+- Quick Sync: /dev/dri passed through, group_add 105 (render; card0 is 44). The image adds abc (1000:10) to
+  both groups at start. hevc_qsv verified in tdarr-ffmpeg. Jellyfin-HT shares the iGPU: one GPU transcode
+  worker at most, CPU and health-check workers 0, library schedule off-peak only.
+- Cache /volume2/docker/tdarr/cache -> /tdarr-cache. Scratch /volume2/docker/tdarr/test/{in,out} -> /tdarr-test
+  (copies of library files only).
+- Guards: node starts paused (startPaused=true), all workers 0 in compose, auto plugin update off, no login.
+  Do not unpause, raise workers or point a library at /media-private or /media-private-v3 until the owner
+  approves the test results. Flow: skip hevc/av1, skip 10-bit, skip above 1080p and below 720p, skip under
+  2 Mbps (1080p) / 1 Mbps (720p), hevc_qsv global_quality 23 (1080p) / 22 (720p), copy all audio and
+  subtitles, keep the container, keep the output only if it is smaller. Test outputs go to /tdarr-test/out;
+  never add Replace Original File until the owner approves.
   
   
