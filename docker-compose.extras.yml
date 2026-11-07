@@ -230,6 +230,17 @@ services:
       - /volume2/docker/tdarr/temp:/temp
       - /volume1/media:/media1:ro
       - /volume3/media2:/media2:ro
+      # Write-enabled: the two private libraries only (HEVC/QSV, test phase).
+      # Never point a library at these until the test results are approved.
+      - /volume1/media-private:/media-private
+      - /volume1/media-private-v3:/media-private-v3
+      - /volume2/docker/tdarr/cache:/tdarr-cache
+      - /volume2/docker/tdarr/test:/tdarr-test
+    # Quick Sync (Pentium Gold 8505 UHD iGPU), shared with Jellyfin-HT: one worker, off-peak.
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - "105"
     networks:
       traefik-proxy:
         ipv4_address: 192.168.100.16
