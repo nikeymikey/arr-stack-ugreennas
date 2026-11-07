@@ -262,3 +262,32 @@ services:
         ipv4_address: 192.168.100.17
     restart: unless-stopped
     logging: *default-logging
+
+  #############################################
+  # Adult library (Whisparr v3 "Eros"), alongside v2. Local only: no Traefik router,
+  # no Cloudflare record, no router forward. Never publish it.
+  # Bound to 127.0.0.1 until its login is set (UI via: ssh -L 6970:127.0.0.1:6970 nas),
+  # then 192.168.50.139:6970 only. Not managed by Profilarr.
+  # hotio s6 image: fails under user:, so it starts as root and drops to PUID:PGID.
+  # Usenet: SABnzbd category "whisparr3" -> Syncthing folder data1/whisparr3.
+  # Torrents: label "whisparr3", seedbox /sda/0006/downloads/whisparr3.
+  #############################################
+  whisparr3:
+    image: ghcr.io/hotio/whisparr:v3-3.6.5-release.1886
+    container_name: whisparr3
+    ports:
+      - "127.0.0.1:6970:6969"
+    environment:
+      - TZ=Europe/London
+      - PUID=1000
+      - PGID=10
+      - UMASK=002
+    volumes:
+      - /volume2/docker/whisparr3/config:/config
+      - /volume2/docker/syncthing/data1/whisparr3:/downloads
+      - /volume1/media-private-v3:/media-private-v3
+    networks:
+      traefik-proxy:
+        ipv4_address: 192.168.100.18
+    restart: unless-stopped
+    logging: *default-logging
