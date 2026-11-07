@@ -7,7 +7,7 @@ DEST_ROOT="/home/Nikeymikey/backups/arr-stack"
 STACK="/volume2/docker/arr-stack"
 KEEP_DAYS=14
 STOP_APPS=1
-APPS="sonarr radarr prowlarr bazarr jellyseerr profilarr rewindarr maintainerr tdarr whisparr"
+APPS="sonarr radarr prowlarr bazarr jellyseerr profilarr rewindarr maintainerr tdarr whisparr whisparr3"
 
 [ "$(id -u)" = 0 ] || { echo "Run with sudo" >&2; exit 1; }
 [ -d "$(dirname "$DEST_ROOT")" ] || { echo "Create $(dirname "$DEST_ROOT") first" >&2; exit 1; }
@@ -83,6 +83,8 @@ backup_dir tdarr-server  /volume2/docker/tdarr/server
 backup_dir tdarr-configs /volume2/docker/tdarr/configs
 # Whisparr v2: SQLite DB in config (stopped above). logs/ and MediaCover/ are skipped.
 backup_dir whisparr-config /volume2/docker/whisparr/config --exclude='config/logs' --exclude='config/MediaCover'
+# Whisparr v3: SQLite DB whisparr3.db in config (stopped above). logs/ and MediaCover/ are skipped.
+backup_dir whisparr3-config /volume2/docker/whisparr3/config --exclude='config/logs' --exclude='config/MediaCover'
 
 tar -czf "$DEST/stack-files.tar.gz" -C "$STACK" .env traefik/acme.json traefik/traefik.yml traefik/dynamic \
   docker-compose.arr-stack.yml docker-compose.traefik.yml docker-compose.extras.yml 2>>"$LOG" || fail "stack-files: tar reported errors"
