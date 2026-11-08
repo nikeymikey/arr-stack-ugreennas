@@ -234,8 +234,9 @@ services:
       # Never point a library at these until the test results are approved.
       - /volume1/media-private:/media-private
       - /volume1/media-private-v3:/media-private-v3
-      - /volume2/docker/tdarr/cache:/tdarr-cache
-      - /volume2/docker/tdarr/test:/tdarr-test
+      # Shared with the PC node over SMB (UGOS share "tdarr-work", no recycle bin).
+      - /volume2/tdarr-work/cache:/tdarr-cache
+      - /volume2/tdarr-work/test:/tdarr-test
     # Quick Sync (Pentium Gold 8505 UHD iGPU), shared with Jellyfin-HT: one worker, off-peak.
     devices:
       - /dev/dri:/dev/dri
