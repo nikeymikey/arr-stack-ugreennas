@@ -143,8 +143,21 @@
 - Quick Sync: /dev/dri passed through, group_add 105 (render; card0 is 44). The image adds abc (1000:10) to
   both groups at start. hevc_qsv verified in tdarr-ffmpeg. Jellyfin-HT shares the iGPU: one GPU transcode
   worker at most, CPU and health-check workers 0, library schedule off-peak only.
-- Cache /volume2/docker/tdarr/cache -> /tdarr-cache. Scratch /volume2/docker/tdarr/test/{in,out} -> /tdarr-test
-  (copies of library files only).
+- Cache /volume2/tdarr-work/cache -> /tdarr-cache. Scratch /volume2/tdarr-work/test/{in,out} -> /tdarr-test
+  (copies of library files only). tdarr-work is a UGOS shared folder WITHOUT a recycle bin (keep it that way).
+  /volume2/docker/tdarr/{cache,test} are the old, unused locations.
+- UGOS enables the Samba recycle bin on every other share (no size limit): deletions over SMB land in
+  <share>/#recycle, local deletions do not. Every Tdarr library must list #recycle in folders to ignore.
+- PC node "pc-nvenc" (i9-14900K, RTX 5080 NVENC, UHD 770 QSV): L:\Tdarr\Tdarr_Node, version pinned 2.96.01
+  (zip from storage.tdarr.io, no updater). It reads L:\Tdarr\configs\Tdarr_Node_Config.json (not the
+  Tdarr_Node\configs folder) and logs to L:\Tdarr\logs. startPaused true, mapped, server http://127.0.0.1:8266
+  via the ssh tunnel (LocalForward 8266 192.168.100.16:8266 in ~/.ssh/config; 8266 is never published).
+  Translators: /media-private-v3/ -> K:/, /media-private/ -> J:/ (v3 first, trailing slashes), /tdarr-cache ->
+  N:/cache, /tdarr-test -> N:/test. Drives mapped as SMB user "tdarr" by IP (\\192.168.50.139\...), because the
+  owner's own drives use \\MikesServer2 (error 1219 otherwise). SMB is LAN only: never forward 445.
+  Main libraries (media, media2) are not mapped on the PC until the owner approves them.
+- NVENC in Set Video Encoder sends -qp (constant QP), not constant quality: the PC needs its own branch
+  (Check Node Hardware Encoder hevc_nvenc -> Custom Arguments -rc vbr -cq N -b:v 0) and its own test.
 - Guards: node starts paused (startPaused=true), all workers 0 in compose, auto plugin update off, no login.
   Do not unpause, raise workers or point a library at /media-private or /media-private-v3 until the owner
   approves the test results. Flow: skip hevc/av1, skip 10-bit, skip above 1080p, skip under 2 Mbps (1080p) /
