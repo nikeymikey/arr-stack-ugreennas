@@ -136,13 +136,15 @@
 - Prowlarr apps "Whisparr" and "Whisparr v3", both tag adult (PornoLab is adult-only).
 - hotio Whisparr v3 creates user 'whisparr' on first start and prints its password in docker logs.
   Never grep auth lines from its logs.
-- Tdarr 2.96.01 (tdarr, http://127.0.0.1:8265 on the NAS only; reach it through an SSH tunnel). TEST PHASE.
+- Tdarr 2.96.01 (tdarr, http://127.0.0.1:8265 on the NAS only; reach it through an SSH tunnel). TEST PHASE
+  finished 2026-11-08 (QSV and NVENC passed on copies); the real private libraries are the next phase.
   Write-enabled on the two private libraries ONLY: /volume1/media-private -> /media-private and
   /volume1/media-private-v3 -> /media-private-v3. /media1 and /media2 stay :ro: never run Tdarr on the
   main libraries and never make those mounts writable.
 - Quick Sync: /dev/dri passed through, group_add 105 (render; card0 is 44). The image adds abc (1000:10) to
   both groups at start. hevc_qsv verified in tdarr-ffmpeg. Jellyfin-HT shares the iGPU: one GPU transcode
-  worker at most, CPU and health-check workers 0, library schedule off-peak only.
+  worker at most, CPU and health-check workers 0, off-peak only. A library schedule applies to EVERY node:
+  keep library schedules open and put off-peak hours on the nas-internal node schedule instead.
 - Cache /volume2/tdarr-work/cache -> /tdarr-cache. Scratch /volume2/tdarr-work/test/{in,out} -> /tdarr-test
   (copies of library files only). tdarr-work is a UGOS shared folder WITHOUT a recycle bin (keep it that way).
   /volume2/docker/tdarr/{cache,test} are the old, unused locations.
@@ -155,16 +157,31 @@
   Translators: /media-private-v3/ -> K:/, /media-private/ -> J:/ (v3 first, trailing slashes), /tdarr-cache ->
   N:/cache, /tdarr-test -> N:/test. Drives mapped as SMB user "tdarr" by IP (\\192.168.50.139\...), because the
   owner's own drives use \\MikesServer2 (error 1219 otherwise). SMB is LAN only: never forward 445.
+  The tdarr login is saved with cmdkey /add:192.168.50.139 so J/K/N reconnect after a reboot (without it the
+  node fails with os error 1326). Map with net use X: \\192.168.50.139\<share> /persistent:yes and NO /user.
+  Files the PC writes are owned tdarr (1004:100); the shares' ACLs keep them usable by 1000:10.
+  Quick Sync on the PC's UHD 770 crashed on WMV3 (0xC0000005): the PC must use NVENC.
   Main libraries (media, media2) are not mapped on the PC until the owner approves them.
-- NVENC in Set Video Encoder sends -qp (constant QP), not constant quality: the PC needs its own branch
-  (Check Node Hardware Encoder hevc_nvenc -> Custom Arguments -rc vbr -cq N -b:v 0) and its own test.
 - Guards: node starts paused (startPaused=true), all workers 0 in compose, auto plugin update off, no login.
   Do not unpause, raise workers or point a library at /media-private or /media-private-v3 until the owner
-  approves the test results. Flow: skip hevc/av1, skip 10-bit, skip above 1080p, skip under 2 Mbps (1080p) /
-  1 Mbps (720p) / 500 kbps (SD), hevc_qsv global_quality 23 (1080p) / 22 (720p and SD), copy all audio and
-  subtitles, keep the container except avi/wmv -> mkv, keep the output only if it is smaller. SD (480p, 576p,
-  Other: 66 files, 37 GB, incl. 7 XviD avi and 7 WMV3/VC-1 wmv) uses software decode + QSV encode (QSV cannot
-  decode MPEG-4 Part 2). Test outputs go to /tdarr-test/out; never add Replace Original File until the owner
-  approves (an avi/wmv -> mkv swap changes the filename: rescan in Whisparr afterwards).
+  approves. Pause the nodes between runs.
+- Flow "Private HEVC QSV – TEST" (id CGBB92A8r): skip hevc/av1, skip 10-bit, skip above 1080p, skip under
+  2000 kbps (1080p) / 1800 kbps (720p) / 500 kbps (SD) (Check Overall Bitrate "Less Than"), copy all audio and
+  subtitles, keep the container except avi/wmv -> mkv, keep the output only if it is smaller.
+  Before every Begin Command: Check Node Hardware Encoder hevc_nvenc (output 1 -> NVENC path, 2 -> QSV path).
+  QSV (NAS): Set Video Encoder qsv, global_quality 23 (1080p) / 22 (720p, SD), preset medium; Custom Arguments
+  -tag:v hvc1. NVENC (PC): Set Video Encoder nvenc with its Quality setting OFF (otherwise it sends -qp),
+  preset slow (= p6); Custom Arguments -rc vbr -cq 30 (1080p) / -cq 29 (720p, SD) -b:v 0 -spatial-aq 1 -tag:v hvc1.
+  These cq values matched QSV quality by SSIM/PSNR on the same clips. SD = 480p, 576p and Other (66 files,
+  37 GB, incl. 7 XviD avi and 7 WMV3/VC-1 wmv); SD paths use software decode on both (QSV cannot decode
+  MPEG-4 Part 2). -tag:v hvc1 makes mp4 play on Apple devices; mkv ignores it.
+- Every flow ending must point back at the original: Set Working File (originalFile) after Copy to Directory
+  and on Compare File Size outputs 2/3, or Tdarr reports "Final working file is still in the transcode cache".
+  Test outputs go to /tdarr-test/out (QSV references in out/qsv); never add Replace Original File until the
+  owner approves (an avi/wmv -> mkv swap changes the filename: rescan in Whisparr afterwards).
+- Tdarr API (from inside the container, curl http://127.0.0.1:8265/api/v2/...): get-nodes; cruddb with
+  collection FileJSONDB / LibrarySettingsJSONDB / FlowsJSONDB, mode getAll (read); requeue = bulk-update-files
+  {"data":{"fileIds":[...],"updatedObj":{"TranscodeDecisionMaker":"Queued"}}}. Flow plugins: display name in
+  "name", settings in "inputsDB". Job reports: /app/server/Tdarr/DB2/JobReports. Do not write flows via the API.
   
   
