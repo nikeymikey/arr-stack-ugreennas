@@ -173,11 +173,15 @@
   subtitles, keep the container except avi/wmv -> mkv, keep the output only if it is smaller.
   Before every Begin Command: Check Node Hardware Encoder hevc_nvenc (output 1 -> NVENC path, 2 -> QSV path).
   QSV (NAS): Set Video Encoder qsv, global_quality 23 (1080p) / 22 (720p, SD), preset medium; Custom Arguments
-  -tag:v hvc1. NVENC (PC): Set Video Encoder nvenc with its Quality setting OFF (otherwise it sends -qp),
-  preset slow (= p6); Custom Arguments -rc vbr -cq 30 (1080p) / -cq 29 (720p, SD) -b:v 0 -spatial-aq 1 -tag:v hvc1.
+  -tag:v:0 hvc1. NVENC (PC): Set Video Encoder nvenc with its Quality setting OFF (otherwise it sends -qp),
+  preset slow (= p6); Custom Arguments -rc vbr -cq 30 (1080p) / -cq 29 (720p, SD) -b:v 0 -spatial-aq 1 -tag:v:0 hvc1.
   These cq values matched QSV quality by SSIM/PSNR on the same clips. SD = 480p, 576p and Other (66 files,
   37 GB, incl. 7 XviD avi and 7 WMV3/VC-1 wmv); SD paths use software decode on both (QSV cannot decode
-  MPEG-4 Part 2). -tag:v hvc1 makes mp4 play on Apple devices; mkv ignores it.
+  MPEG-4 Part 2). -tag:v:0 hvc1 makes mp4 play on Apple devices; mkv ignores it. Use :0 (first video stream
+  only): plain -tag:v also tags embedded cover art (mjpeg attached_pic) and ffmpeg fails ("Tag hvc1
+  incompatible"). With :0 the cover is copied and kept. Remove Stream By Property cannot match
+  disposition.attached_pic (Tdarr's stream data has no disposition), and removing by codec_name mjpeg would
+  also drop real MJPEG video: do not use either.
 - Every flow ending must point back at the original: Set Working File (originalFile) after Copy to Directory
   and on Compare File Size outputs 2/3, or Tdarr reports "Final working file is still in the transcode cache".
   Test outputs go to /tdarr-test/out (QSV references in out/qsv); never add Replace Original File until the
