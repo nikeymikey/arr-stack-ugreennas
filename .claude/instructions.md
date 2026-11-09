@@ -137,7 +137,9 @@
 - hotio Whisparr v3 creates user 'whisparr' on first start and prints its password in docker logs.
   Never grep auth lines from its logs.
 - Tdarr 2.96.01 (tdarr, http://127.0.0.1:8265 on the NAS only; reach it through an SSH tunnel). TEST PHASE
-  finished 2026-11-08 (QSV and NVENC passed on copies); the real private libraries are the next phase.
+  finished 2026-11-08 (QSV and NVENC passed on copies). PILOT finished 2026-11-09 on the real libraries
+  (v2 Jeff's Models, v3 movies/Sensational Video, PC node): 38 files, 61 GB -> 27 GB, durations and audio
+  intact, playback approved, originals deleted. Next: roll out v3, then v2 (~50-60 h of PC time, in sessions).
   Write-enabled on the two private libraries ONLY: /volume1/media-private -> /media-private and
   /volume1/media-private-v3 -> /media-private-v3. /media1 and /media2 stay :ro: never run Tdarr on the
   main libraries and never make those mounts writable.
@@ -163,8 +165,9 @@
   Quick Sync on the PC's UHD 770 crashed on WMV3 (0xC0000005): the PC must use NVENC.
   Main libraries (media, media2) are not mapped on the PC until the owner approves them.
 - Guards: node starts paused (startPaused=true), all workers 0 in compose, auto plugin update off, no login.
-  Do not unpause, raise workers or point a library at /media-private or /media-private-v3 until the owner
-  approves. Pause the nodes between runs.
+  The owner starts every run: do not unpause, raise workers, or add or widen a library on /media-private or
+  /media-private-v3 without the owner's go-ahead for that run. Keep nas-internal paused during live runs (the
+  PC does the replacing). Pause the nodes between runs; the queue survives a PC shutdown.
 - Flow "Private HEVC QSV – TEST" (id CGBB92A8r): skip hevc/av1, skip 10-bit, skip above 1080p, skip under
   2000 kbps (1080p) / 1800 kbps (720p) / 500 kbps (SD) (Check Overall Bitrate "Less Than"), copy all audio and
   subtitles, keep the container except avi/wmv -> mkv, keep the output only if it is smaller.
@@ -179,6 +182,16 @@
   and on Compare File Size outputs 2/3, or Tdarr reports "Final working file is still in the transcode cache".
   Test outputs go to /tdarr-test/out (QSV references in out/qsv); never add Replace Original File until the
   owner approves (an avi/wmv -> mkv swap changes the filename: rescan in Whisparr afterwards).
+- Flow "Private HEVC – LIVE" (id RmX3mpBUg) = the TEST flow with Replace Original File on Compare File Size
+  output 1 (smaller) and nothing after it; outputs 2/3 end at Set Working File (original kept). Ext
+  avi,wmv,mpg,mpeg -> mkv. Live libraries: cache /tdarr-cache, folders to ignore #recycle, folder watch off,
+  schedule all hours, flow RmX3mpBUg. Files that arrive after a scan wait for the next scan.
+- Replaced originals land in <share>/#recycle/<same path> as <name>.partial.old (the PC replaces over SMB):
+  that is the rollback (copy back, drop the suffix). After a run: check sizes, durations and hvc1, rescan
+  in Whisparr (renamed avi/wmv/mpg), test playback, then delete only that run's *.partial.old with the
+  owner's OK. Leave the rest of #recycle alone.
+- Flow editor bug: deleting a box removes its outgoing links but leaves its incoming ones as invisible
+  broken links. Delete a box's incoming lines first, then the box.
 - Tdarr API (from inside the container, curl http://127.0.0.1:8265/api/v2/...): get-nodes; cruddb with
   collection FileJSONDB / LibrarySettingsJSONDB / FlowsJSONDB, mode getAll (read); requeue = bulk-update-files
   {"data":{"fileIds":[...],"updatedObj":{"TranscodeDecisionMaker":"Queued"}}}. Flow plugins: display name in
