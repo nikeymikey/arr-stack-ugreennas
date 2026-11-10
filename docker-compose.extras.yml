@@ -194,9 +194,9 @@ services:
     logging: *default-logging
 
   #############################################
-  # Transcode automation (Tdarr). DORMANT: no libraries, node paused, 0 workers,
-  # media read-only. No login (auth off): localhost only, UI via
-  # ssh -L 8265:127.0.0.1:8265 nas
+  # Transcode automation (Tdarr). Internal node starts UNPAUSED so it survives the
+  # 03:00 backup restart; its node schedule (set in the UI) is the guard.
+  # No login (auth off): localhost only, UI via ssh -L 8265:127.0.0.1:8265 nas
   #############################################
   tdarr:
     image: ghcr.io/haveagitgat/tdarr:2.96.01
@@ -216,7 +216,7 @@ services:
       - inContainer=true
       - ffmpegVersion=7
       - nodeName=nas-internal
-      - startPaused=true
+      - startPaused=false
       - transcodecpuWorkers=0
       - transcodegpuWorkers=0
       - healthcheckcpuWorkers=0

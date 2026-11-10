@@ -164,10 +164,13 @@
   Files the PC writes are owned tdarr (1004:100); the shares' ACLs keep them usable by 1000:10.
   Quick Sync on the PC's UHD 770 crashed on WMV3 (0xC0000005): the PC must use NVENC.
   Main libraries (media, media2) are not mapped on the PC until the owner approves them.
-- Guards: node starts paused (startPaused=true), all workers 0 in compose, auto plugin update off, no login.
-  The owner starts every run: do not unpause, raise workers, or add or widen a library on /media-private or
-  /media-private-v3 without the owner's go-ahead for that run. Keep nas-internal paused during live runs (the
-  PC does the replacing). Pause the nodes between runs; the queue survives a PC shutdown.
+- Guards: all workers 0 in compose, auto plugin update off, no login. nas-internal starts UNPAUSED
+  (startPaused=false since 2026-11-10, so the 03:00 backup restart does not leave it paused); its node
+  schedule is the guard: Transcode GPU 1 at 00-02 and 03-09, 0 in every other hour (02-03 stays 0 so no
+  job is mid-replace when the backup stops Tdarr). The PC node still starts paused. NAS replacements are
+  local, so their originals skip #recycle (no undo). The owner starts every run: do not unpause, raise
+  workers, or add or widen a library on /media-private or /media-private-v3 without the owner's go-ahead.
+  Pause the PC node between runs; the queue survives a PC shutdown.
 - Flow "Private HEVC QSV – TEST" (id CGBB92A8r): skip hevc/av1, skip 10-bit, skip above 1080p, skip under
   2000 kbps (1080p) / 1800 kbps (720p) / 500 kbps (SD) (Check Overall Bitrate "Less Than"), copy all audio and
   subtitles, keep the container except avi/wmv -> mkv, keep the output only if it is smaller.
