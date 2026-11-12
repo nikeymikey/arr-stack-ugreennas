@@ -228,8 +228,8 @@ services:
       - /volume2/docker/tdarr/configs:/app/configs
       - /volume2/docker/tdarr/logs:/app/logs
       - /volume2/docker/tdarr/temp:/temp
-      - /volume1/media:/media1:ro
-      - /volume3/media2:/media2:ro
+      - /volume1/media:/media1
+      - /volume3/media2:/media2
       # Write-enabled: the two private libraries only (HEVC/QSV, test phase).
       # Never point a library at these until the test results are approved.
       - /volume1/media-private:/media-private

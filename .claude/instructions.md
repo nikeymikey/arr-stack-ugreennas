@@ -141,8 +141,8 @@
   (v2 Jeff's Models, v3 movies/Sensational Video, PC node): 38 files, 61 GB -> 27 GB, durations and audio
   intact, playback approved, originals deleted. Next: roll out v3, then v2 (~50-60 h of PC time, in sessions).
   Write-enabled on the two private libraries ONLY: /volume1/media-private -> /media-private and
-  /volume1/media-private-v3 -> /media-private-v3. /media1 and /media2 stay :ro: never run Tdarr on the
-  main libraries and never make those mounts writable.
+  /volume1/media-private-v3 -> /media-private-v3. Tdarr may write to the main libraries (/media1,
+  /media2) only while a batch the owner approved is running; workers stay at 0 otherwise.
 - Quick Sync: /dev/dri passed through, group_add 105 (render; card0 is 44). The image adds abc (1000:10) to
   both groups at start. hevc_qsv verified in tdarr-ffmpeg. Jellyfin-HT shares the iGPU: one GPU transcode
   worker at most, CPU and health-check workers 0, off-peak only. A library schedule applies to EVERY node:
